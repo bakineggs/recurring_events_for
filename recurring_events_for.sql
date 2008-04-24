@@ -14,10 +14,11 @@ DECLARE
   start_time TEXT;
   end_date TIMESTAMP;
   next_date DATE;
-  event_frequency TEXT;
+  recurs TEXT;
+  pattern_type TEXT;
   recurrences_end TIMESTAMP;
   offset INTERVAL;
-  period INTERVAL;
+  duration INTERVAL;
   recurrence_count INT;
 BEGIN
   FOR row IN
@@ -63,11 +64,12 @@ BEGIN
       start_time := start_date::time::text;
       original_date := start_date::date;
 
-      event_frequency := event.frequency;
+      recurs := event.frequency;
+      pattern_type := 'normal';
       offset := '00:00:00'::interval;
-      IF event_frequency = 'weekly' AND row.day IS NOT NULL THEN
+      IF recurs = 'weekly' AND row.day IS NOT NULL THEN
         offset := offset + (((row.day-cast(extract(dow from start_date) as int))%7)||' days')::interval;
-      ELSIF event_frequency = 'monthly' AND row.week IS NOT NULL AND row.day IS NOT NULL THEN
+      ELSIF recurs = 'monthly' AND row.week IS NOT NULL AND row.day IS NOT NULL THEN
         offset := offset + (((row.day-cast(extract(dow from start_date) as int))%7)||' days')::interval;
         IF extract(month from start_date+offset) < row.month OR (row.month = 1 AND extract(month from start_date+offset) = 12) THEN
           offset := offset + '7 days'::interval;
@@ -75,7 +77,8 @@ BEGIN
           offset := offset - '7 days'::interval;
         END IF;
         IF row.week > 0 THEN
-          event_frequency := 'monthly_positive_week_dow';
+          recurs := 'monthly_by_week_dow';
+          pattern_type := 'positive_week_dow';
           offset := offset - '28 days'::interval;
           WHILE offset < 0 LOOP
             offset := offset + '28 days'::interval;
@@ -87,7 +90,8 @@ BEGIN
             END LOOP;
           END LOOP;
         ELSE
-          event_frequency := 'monthly_negative_week_dow';
+          recurs := 'monthly_by_week_dow';
+          pattern_type := 'negative_week_dow';
           offset := offset - '28 days'::interval;
           WHILE offset < 0 LOOP
             offset := offset + '28 days'::interval;
@@ -99,10 +103,9 @@ BEGIN
             END LOOP;
           END LOOP;
         END IF;
-      ELSIF event_frequency = 'monthly' AND row.day IS NOT NULL THEN
+      ELSIF recurs = 'monthly' AND row.day IS NOT NULL THEN
         offset := offset + ((row.day-cast(extract(day from start_date) as int))||' days')::interval;
-        period := '1 month'::interval;
-      ELSIF event_frequency = 'yearly' AND row.week IS NOT NULL AND row.day IS NOT NULL THEN
+      ELSIF recurs = 'yearly' AND row.week IS NOT NULL AND row.day IS NOT NULL THEN
         IF row.month IS NULL THEN
           row.month = extract(month from start_date);
         END IF;
@@ -114,7 +117,8 @@ BEGIN
           offset := offset - '7 days'::interval;
         END IF;
         IF row.week > 0 THEN
-          event_frequency := 'yearly_positive_week_dow';
+          recurs := 'yearly_by_week_dow';
+          pattern_type := 'positive_week_dow';
           offset := offset - '364 days'::interval;
           WHILE start_date+offset < start_date LOOP
             offset := offset + '364 days'::interval;
@@ -129,7 +133,8 @@ BEGIN
             END LOOP;
           END LOOP;
         ELSE
-          event_frequency := 'yearly_negative_week_dow';
+          recurs := 'yearly_by_week_dow';
+          pattern_type := 'negative_week_dow';
           offset := offset - '364 days'::interval;
           WHILE start_date+offset < start_date LOOP
             offset := offset + '364 days'::interval;
@@ -144,41 +149,45 @@ BEGIN
             END LOOP;
           END LOOP;
         END IF;
-      ELSIF event_frequency = 'yearly' AND row.month IS NOT NULL OR row.day IS NOT NULL THEN
+      ELSIF recurs = 'yearly' AND row.month IS NOT NULL OR row.day IS NOT NULL THEN
         IF row.month IS NOT NULL THEN
           offset := offset + ((row.month-cast(extract(month from start_date) as int))||' months')::interval;
         END IF;
         IF row.day IS NOT NULL THEN
           offset := offset + ((row.day-cast(extract(day from start_date) as int))||' days')::interval;
         END IF;
-        period := '1 year'::interval;
       END IF;
+      duration := interval_for(recurs);
       WHILE offset < 0 LOOP
-        offset := offset + period;
+        offset := offset + duration;
       END LOOP;
       start_date := start_date + offset;
       end_date := end_date + offset;
 
       IF event.until IS NOT NULL AND event.until < range_end THEN
         recurrences_end = event.until;
+      ELSIF event.count IS NOT NULL AND start_date+(event.count-1)*duration < range_end THEN
+        recurrences_end = start_date+(event.count-1)*duration;
       ELSE
         recurrences_end = range_end;
       END IF;
 
-      recurrence_count := 1;
+      recurrence_count := CEIL(intervals_between(start_date::date, range_start::date, duration));
+
       <<recurrences>>
       FOR next_date IN
         SELECT *
           FROM generate_recurrences(
-            event_frequency,
+            pattern_type,
+            duration,
             start_date::date,
+            range_start::date,
             recurrences_end::date
           )
       LOOP
-        CONTINUE WHEN next_date = original_date;
         recurrence_count := recurrence_count + 1;
+        CONTINUE WHEN next_date = original_date;
         EXIT WHEN event.count IS NOT NULL AND recurrence_count > event.count;
-        CONTINUE WHEN next_date < range_start::date;
         FOR cancellation IN
           SELECT *
             FROM event_cancellations
