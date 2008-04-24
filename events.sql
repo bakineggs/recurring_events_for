@@ -20,6 +20,6 @@ ALTER TABLE event_recurrences ADD CONSTRAINT event FOREIGN KEY (event_id) REFERE
 CREATE TABLE event_cancellations (
   id serial PRIMARY KEY,
   event_id integer,
-  recurrence_id integer
+  date date
 );
 ALTER TABLE event_cancellations ADD CONSTRAINT event FOREIGN KEY (event_id) REFERENCES events (id);

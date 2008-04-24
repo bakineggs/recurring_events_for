@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION recurring_events_for(
 DECLARE
   row record;
   event events;
-  cancellation event_cancellations;
+  cancelled INT;
   original_date DATE;
   start_date TIMESTAMP;
   start_time TEXT;
@@ -19,7 +19,6 @@ DECLARE
   recurrences_end TIMESTAMP;
   offset INTERVAL;
   duration INTERVAL;
-  recurrence_count INT;
 BEGIN
   FOR row IN
     SELECT events.*, event_recurrences.day, event_recurrences.month, event_recurrences.week
@@ -33,27 +32,6 @@ BEGIN
     LOOP
       event := row;
 
-      <<recurrence>>
-      FOR recurrence_count IN 1..1 LOOP
-        IF event.frequency = 'once' OR
-            (event.date <= range_end::date AND event.date >= range_start::date) OR
-            (event.starts_at <= range_end AND event.ends_at >= range_start) THEN
-          FOR cancellation IN
-            SELECT *
-              FROM event_cancellations
-              WHERE event_id = event.id
-                AND recurrence_id = 1
-              LIMIT 1
-          LOOP
-            CONTINUE recurrence;
-          END LOOP;
-          event.recurrence_id := 1;
-          RETURN NEXT event;
-        END IF;
-      END LOOP;
-
-      CONTINUE WHEN event.frequency = 'once';
-
       IF event.date IS NOT NULL THEN
         start_date := event.date + interval '0 hours';
         end_date := event.date + interval '23:59:59';
@@ -63,6 +41,18 @@ BEGIN
       END IF;
       start_time := start_date::time::text;
       original_date := start_date::date;
+
+      IF event.frequency = 'once' OR (start_date <= range_end AND end_date >= range_start) THEN
+        SELECT COUNT(1) INTO cancelled
+          FROM event_cancellations
+          WHERE event_id = event.id
+            AND date = start_date::date;
+        IF cancelled = 0 THEN
+          RETURN NEXT event;
+        END IF;
+      END IF;
+
+      CONTINUE WHEN event.frequency = 'once';
 
       recurs := event.frequency;
       pattern_type := 'normal';
@@ -172,9 +162,6 @@ BEGIN
         recurrences_end = range_end;
       END IF;
 
-      recurrence_count := CEIL(intervals_between(start_date::date, range_start::date, duration));
-
-      <<recurrences>>
       FOR next_date IN
         SELECT *
           FROM generate_recurrences(
@@ -185,18 +172,12 @@ BEGIN
             recurrences_end::date
           )
       LOOP
-        recurrence_count := recurrence_count + 1;
         CONTINUE WHEN next_date = original_date;
-        EXIT WHEN event.count IS NOT NULL AND recurrence_count > event.count;
-        FOR cancellation IN
-          SELECT *
-            FROM event_cancellations
-            WHERE event_id = event.id
-              AND recurrence_id = recurrence_count
-            LIMIT 1
-        LOOP
-          CONTINUE recurrences;
-        END LOOP;
+        SELECT COUNT(1) INTO cancelled
+          FROM event_cancellations
+          WHERE event_id = event.id
+            AND date = next_date::date;
+        CONTINUE WHEN cancelled > 0;
         IF event.date IS NOT NULL THEN
           event.date := next_date;
         ELSE
@@ -204,7 +185,6 @@ BEGIN
           event.ends_at := event.starts_at+(end_date-start_date);
           CONTINUE WHEN event.ends_at < range_start;
         END IF;
-        event.recurrence_id = recurrence_count;
         RETURN NEXT event;
       END LOOP;
     END LOOP;
