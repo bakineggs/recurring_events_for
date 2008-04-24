@@ -1,6 +1,7 @@
 CREATE OR REPLACE FUNCTION recurring_events_for(
   range_start TIMESTAMP,
-  range_end  TIMESTAMP
+  range_end  TIMESTAMP,
+  tz_offset INTERVAL
 )
   RETURNS SETOF events
   LANGUAGE plpgsql STABLE
@@ -28,11 +29,15 @@ BEGIN
         frequency <> 'once' OR
         (frequency = 'once' AND
           ((date <= range_end::date AND date >= range_start::date) OR
-          (starts_at <= range_end AND ends_at >= range_start)))
+          (starts_at + tz_offset <= range_end AND ends_at + tz_offset >= range_start)))
     LOOP
       event := row;
 
       IF event.frequency = 'once' THEN
+        IF event.starts_at IS NOT NULL AND event.ends_at IS NOT NULL THEN
+          event.starts_at := event.starts_at + tz_offset;
+          event.ends_at := event.ends_at + tz_offset;
+        END IF;
         RETURN NEXT event;
         CONTINUE;
       END IF;
@@ -41,8 +46,8 @@ BEGIN
         start_date := event.date + interval '0 hours';
         end_date := event.date + interval '23:59:59';
       ELSE
-        start_date := event.starts_at;
-        end_date := event.ends_at;
+        start_date := event.starts_at + tz_offset;
+        end_date := event.ends_at + tz_offset;
       END IF;
       start_time := start_date::time::text;
       original_date := start_date::date;
@@ -178,10 +183,10 @@ BEGIN
             AND date = next_date::date;
         CONTINUE WHEN cancelled > 0;
         IF event.date IS NOT NULL THEN
-          event.date := next_date;
+          event.date := next_date::date;
         ELSE
-          event.starts_at := (next_date || ' ' || start_time)::timestamp;
-          event.ends_at := event.starts_at+(end_date-start_date);
+          event.starts_at := (next_date || ' ' || start_time)::timestamp - tz_offset;
+          event.ends_at := event.starts_at+(end_date-start_date) - tz_offset;
           CONTINUE WHEN event.ends_at < range_start;
         END IF;
         RETURN NEXT event;
