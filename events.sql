@@ -1,12 +1,25 @@
-CREATE DOMAIN recurrence AS TEXT
-CHECK ( VALUE IN ( 'none', 'daily', 'weekly', 'monthly' ) );
-
 CREATE TABLE events (
-  id         SERIAL     PRIMARY KEY,
-  user_id    INTEGER    NOT NULL,
-  starts_at  TIMESTAMP  NOT NULL,
-  start_tz   TEXT       NOT NULL,
-  ends_at    TIMESTAMP,
-  end_tz     TEXT       NOT NULL,
-  recurrence RECURRENCE NOT NULL DEFAULT 'none'
+  id serial PRIMARY KEY,
+  date date,
+  starts_at timestamp without time zone,
+  ends_at timestamp without time zone,
+  frequency character varying(255),
+  count integer,
+  "until" date
 );
+
+CREATE TABLE event_recurrences (
+  id serial PRIMARY KEY,
+  event_id integer,
+  "month" integer,
+  "day" integer,
+  week integer
+);
+ALTER TABLE event_recurrences ADD CONSTRAINT event FOREIGN KEY (event_id) REFERENCES events (id);
+
+CREATE TABLE event_cancellations (
+  id serial PRIMARY KEY,
+  event_id integer,
+  recurrence_id integer
+);
+ALTER TABLE event_cancellations ADD CONSTRAINT event FOREIGN KEY (event_id) REFERENCES events (id);
