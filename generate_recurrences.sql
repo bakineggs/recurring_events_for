@@ -14,6 +14,10 @@ BEGIN
   next_date := original_date + duration * (CEIL(intervals_between(original_date, range_start, duration))-1);
   IF pattern_type = 'positive_week_dow' OR pattern_type = 'negative_week_dow' THEN
     LOOP
+      -- increase by 2 durations if 1 will put us in the same month
+      IF extract(year from next_date + duration) = extract(year from next_date) AND extract(month from next_date + duration) = extract(month from duration) THEN
+        next_date := next_date + duration;
+      END IF;
       next_date := next_date + duration;
 
       -- Yearly events could be put in the wrong month since 364 days is less than a year.
