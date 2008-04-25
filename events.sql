@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS event_cancellations CASCADE;
+DROP TABLE IF EXISTS event_recurrences CASCADE;
+DROP TABLE IF EXISTS events CASCADE;
+
 CREATE TABLE events (
   id serial PRIMARY KEY,
   date date,
