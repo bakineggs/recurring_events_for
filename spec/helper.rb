@@ -21,12 +21,17 @@ rescue PGError
   raise
 end
 
-def executing(statement)
+def executing(statements)
   $db_conn.exec "BEGIN"
   results = []
-  $db_conn.exec(statement).each do |result|
-    results.push(result)
-  end.clear
-  $db_conn.exec "ROLLBACK"
+  begin
+    statements.to_a.each do |statement|
+      $db_conn.exec(statement).each do |result|
+        results.push(result)
+      end.clear
+    end
+  ensure
+    $db_conn.exec "ROLLBACK"
+  end
   results
 end
