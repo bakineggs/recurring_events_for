@@ -122,6 +122,43 @@ describe 'recurring_events_for' do
     ]).should == []
   end
 
+  describe 'time zone offset' do
+    it "should return starts_at and ends_at in the user's time zone" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-27 12:00pm', '-5 hours');"
+      ]).should == [
+        ['2008-04-25 07:00:00', '2008-04-26 07:00:00']
+      ]
+    end
+
+    it "should take time zone into account when deciding whether or not a date is in the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 7:00am', '-5 hours');"
+      ]).should == [
+        ['2008-04-25 07:00:00', '2008-04-26 07:00:00']
+      ]
+
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-26 7:00am', '2008-04-27 12:00pm', '-5 hours');"
+      ]).should == [
+        ['2008-04-25 07:00:00', '2008-04-26 07:00:00']
+      ]
+
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-26 8:00am', '2008-04-27 12:00pm', '-5 hours');"
+      ]).should == []
+
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 4:00pm', '5 hours');"
+      ]).should == []
+    end
+  end
+
   describe 'recurring' do
     it "should only include events before or on the until date" do
     executing([
