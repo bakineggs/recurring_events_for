@@ -122,7 +122,6 @@ describe 'recurring_events_for' do
     ]).should == []
   end
 
-
   describe 'recurring' do
     it "should only include events before or on the until date" do
     executing([
@@ -145,7 +144,6 @@ describe 'recurring_events_for' do
       ['2008-04-27']
     ]
   end
-
 
     describe 'cancellations' do
       it "should not include cancelled recurrences" do
