@@ -80,5 +80,12 @@ describe 'generate_recurrences' do
         ['2008-08-14']
       ]
     end
+
+    it "should not include recurrences before the original_date" do
+      executing("select * from generate_recurrences('positive_week_dow', '28 days', '2008-05-01', '2008-04-01', '2008-06-05');").should == [
+        ['2008-05-01'],
+        ['2008-06-05']
+      ]
+    end
   end
 end

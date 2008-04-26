@@ -41,7 +41,7 @@ BEGIN
           * '7 days'::interval;
       END IF;
       EXIT WHEN next_date > range_end;
-      CONTINUE WHEN next_date < range_start; -- subtracting an extra duration could have put us before the range_start
+      CONTINUE WHEN next_date < range_start OR next_date < original_date; -- subtracting an extra duration could have put us before the range_start or original_date
       RETURN NEXT next_date;
     END LOOP;
   ELSE
