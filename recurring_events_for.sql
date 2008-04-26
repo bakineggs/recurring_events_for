@@ -73,10 +73,12 @@ BEGIN
         offset := offset + (((row.day-cast(extract(dow from start_date) as int))%7)||' days')::interval;
 
         -- adjusting the day of week could have put us in a different month
-        IF extract(month from start_date+offset) < row.month OR (row.month = 1 AND extract(month from start_date+offset) = 12) THEN
-          offset := offset + '7 days'::interval;
-        ELSIF extract(month from start_date+offset) > row.month OR (row.month = 12 AND extract(month from start_date+offset) = 1) THEN
-          offset := offset - '7 days'::interval;
+        IF extract(month from start_date) != extract(month from start_date + offset) THEN
+          IF cast(extract(month from start_date) - extract(month from start_date + offset) as int) % 12 = 1 THEN
+            offset := offset + '7 days'::interval;
+          ELSE
+            offset := offset - '7 days'::interval;
+          END IF;
         END IF;
 
         recurs := 'monthly_by_week_dow';
@@ -91,10 +93,9 @@ BEGIN
           pattern_type := 'negative_week_dow';
           WHILE offset < 0 LOOP
             offset := offset + '28 days'::interval;
-            offset := offset +
-              (row.week + FLOOR(
-                (extract(day from start_date + offset + '1 month'::interval - (start_date + offset))
-                  - extract(day from start_date + offset)) / 7) + 1)
+            offset := offset
+              + (CEIL((1 + extract(day from start_date + offset + '1 month'::interval - (start_date + offset)) - extract(day from start_date + offset)) / 7)
+                + row.week)
               * '7 days'::interval;
           END LOOP;
         END IF;
@@ -110,10 +111,12 @@ BEGIN
         offset := offset + (((row.day-cast(extract(dow from start_date+offset) as int))%7)||' days')::interval;
 
         -- adjusting the day of week could have put us in a different month
-        IF extract(month from start_date+offset) < row.month OR (row.month = 1 AND extract(month from start_date+offset) = 12) THEN
-          offset := offset + '7 days'::interval;
-        ELSIF extract(month from start_date+offset) > row.month OR (row.month = 12 AND extract(month from start_date+offset) = 1) THEN
-          offset := offset - '7 days'::interval;
+        IF extract(month from start_date) != extract(month from start_date + offset) THEN
+          IF cast(extract(month from start_date) - extract(month from start_date + offset) as int) % 12 = 1 THEN
+            offset := offset + '7 days'::interval;
+          ELSE
+            offset := offset - '7 days'::interval;
+          END IF;
         END IF;
 
         recurs := 'yearly_by_week_dow';
@@ -134,10 +137,9 @@ BEGIN
             IF extract(month from start_date+offset) != row.month THEN
               offset := offset + '7 days'::interval;
             END IF;
-            offset := offset +
-              (FLOOR(
-                (extract(day from start_date + offset + '1 month'::interval - (start_date + offset))
-                  - extract(day from start_date + offset)) / 7) - 1 - row.week)
+            offset := offset
+              + (CEIL((1 + extract(day from start_date + offset + '1 month'::interval - (start_date + offset)) - extract(day from start_date + offset)) / 7)
+                + row.week)
               * '7 days'::interval;
           END LOOP;
         END IF;
@@ -152,7 +154,7 @@ BEGIN
       END IF;
 
       duration := interval_for(recurs);
-      WHILE offset < 0 LOOP
+      WHILE start_date + offset < start_date LOOP
         offset := offset + duration;
       END LOOP;
       start_date := start_date + offset;
