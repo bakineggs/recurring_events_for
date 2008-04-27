@@ -25,7 +25,7 @@ def executing(statements)
   $db_conn.exec "BEGIN"
   results = []
   begin
-    statements.to_a.each do |statement|
+    [statements].flatten.each do |statement|
       $db_conn.exec(statement).each do |result|
         results.push(result)
       end.clear
