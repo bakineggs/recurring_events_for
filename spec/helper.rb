@@ -7,7 +7,7 @@ begin
     '',
     '',
     'recurring_events_test',
-    'dan',
+    '',
     ''
   )
   
