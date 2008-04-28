@@ -198,26 +198,26 @@ describe 'recurring_events_for' do
     end
 
     it "should only include events before or on the until date" do
-    executing([
-      "insert into events (date, frequency, until) values ('2008-04-25', 'daily', '2008-04-27');",
-      "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-29 12:00pm', '0');"
-    ]).should == [
-      ['2008-04-25'],
-      ['2008-04-26'],
-      ['2008-04-27']
-    ]
-  end
+      executing([
+        "insert into events (date, frequency, until) values ('2008-04-25', 'daily', '2008-04-27');",
+        "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-29 12:00pm', '0');"
+      ]).should == [
+        ['2008-04-25'],
+        ['2008-04-26'],
+        ['2008-04-27']
+      ]
+    end
 
     it "should only include events for count recurrences" do
-    executing([
-      "insert into events (date, frequency, count) values ('2008-04-25', 'daily', 3);",
-      "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-29 12:00pm', '0');"
-    ]).should == [
-      ['2008-04-25'],
-      ['2008-04-26'],
-      ['2008-04-27']
-    ]
-  end
+      executing([
+        "insert into events (date, frequency, count) values ('2008-04-25', 'daily', 3);",
+        "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-29 12:00pm', '0');"
+      ]).should == [
+        ['2008-04-25'],
+        ['2008-04-26'],
+        ['2008-04-27']
+      ]
+    end
 
     describe 'cancellations' do
       it "should not include cancelled recurrences" do
