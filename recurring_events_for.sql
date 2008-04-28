@@ -34,10 +34,6 @@ BEGIN
       event := row;
 
       IF event.frequency = 'once' THEN
-        IF event.starts_at IS NOT NULL AND event.ends_at IS NOT NULL THEN
-          event.starts_at := event.starts_at + tz_offset;
-          event.ends_at := event.ends_at + tz_offset;
-        END IF;
         RETURN NEXT event;
         CONTINUE;
       END IF;
@@ -174,7 +170,7 @@ BEGIN
             pattern_type,
             duration,
             start_date::date,
-            range_start::date,
+            (range_start - (end_date - start_date))::date,
             recurrences_end::date
           )
       LOOP
@@ -186,10 +182,12 @@ BEGIN
         CONTINUE WHEN cancelled > 0;
         IF event.date IS NOT NULL THEN
           event.date := next_date::date;
+          CONTINUE WHEN event.date < range_start::date;
         ELSE
           event.starts_at := (next_date || ' ' || start_time)::timestamp - tz_offset;
-          event.ends_at := event.starts_at+(end_date-start_date) - tz_offset;
-          CONTINUE WHEN event.ends_at < range_start;
+          CONTINUE WHEN event.starts_at + tz_offset > range_end;
+          event.ends_at := event.starts_at+(end_date-start_date);
+          CONTINUE WHEN event.ends_at + tz_offset < range_start;
         END IF;
         RETURN NEXT event;
       END LOOP;
