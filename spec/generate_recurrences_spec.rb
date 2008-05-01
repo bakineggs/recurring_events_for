@@ -87,5 +87,13 @@ describe 'generate_recurrences' do
         ['2008-06-05']
       ]
     end
+
+    it "should return the correct week when the day of week is the same as that of the last day of the month" do
+      executing("select * from generate_recurrences('negative_week_dow', '28 days', '2008-04-26', '2008-04-26', '2008-06-28');").should == [
+        ['2008-04-26'],
+        ['2008-05-31'],
+        ['2008-06-28']
+      ]
+    end
   end
 end
