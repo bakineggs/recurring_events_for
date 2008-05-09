@@ -12,7 +12,7 @@ DECLARE
   cancelled INT;
   original_date DATE;
   start_date TIMESTAMP;
-  start_time TEXT;
+  start_time TIME;
   end_date TIMESTAMP;
   next_date DATE;
   recurs TEXT;
@@ -45,7 +45,7 @@ BEGIN
         start_date := event.starts_at + tz_offset;
         end_date := event.ends_at + tz_offset;
       END IF;
-      start_time := start_date::time::text;
+      start_time := start_date::time;
       original_date := start_date::date;
 
       IF start_date <= range_end AND end_date >= range_start THEN
@@ -184,7 +184,7 @@ BEGIN
           event.date := next_date::date;
           CONTINUE WHEN event.date < range_start::date;
         ELSE
-          event.starts_at := (next_date || ' ' || start_time)::timestamp - tz_offset;
+          event.starts_at := next_date + start_time - tz_offset;
           CONTINUE WHEN event.starts_at + tz_offset > range_end;
           event.ends_at := event.starts_at+(end_date-start_date);
           CONTINUE WHEN event.ends_at + tz_offset < range_start;
