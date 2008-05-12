@@ -1,16 +1,6 @@
 require File.dirname(__FILE__) + '/helper'
 
 describe 'recurring_events_for' do
-  it "should return dates inside of the range" do
-    executing("select * from generate_recurrences('normal', '1 day', '2008-04-20', '2008-04-25', '2008-04-29');").should == [
-      ['2008-04-25'],
-      ['2008-04-26'],
-      ['2008-04-27'],
-      ['2008-04-28'],
-      ['2008-04-29']
-    ]
-  end
-
   it "should include events on a date inside of the range" do
     executing([
       "insert into events (date, frequency) values ('2008-04-25', 'once');",
