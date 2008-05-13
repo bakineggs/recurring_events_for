@@ -15,6 +15,7 @@ begin
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../interval_for.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../intervals_between.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../generate_recurrences.sql').read
+  $db_conn.exec File.open(File.dirname(__FILE__) + '/../recurrences_for.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../recurring_events_for.sql').read
 rescue PGError
   puts "Failed to connect to and initialize database"

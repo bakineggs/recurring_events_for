@@ -170,7 +170,7 @@ describe 'recurring_events_for' do
 
         executing([
           "insert into events (starts_at, ends_at, frequency) values ('2008-04-18 12:00pm', '2008-04-19 12:00pm', 'weekly');",
-          "select starts_at, ends_at from recurring_events_for('2008-04-26 7:00am', '2008-04-27 12:00pm', '-5 hours');"
+          "select starts_at, ends_at from recurring_events_for('2008-04-26 5:00pm', '2008-04-27 12:00pm', '5 hours');"
         ]).should == [
           ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
         ]
