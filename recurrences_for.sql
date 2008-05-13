@@ -13,12 +13,15 @@ DECLARE
   duration INTERVAL := interval_for(event.frequency);
   next_date DATE;
 BEGIN
-  IF range_start > recurrences_start THEN
-    recurrences_start := recurrences_start + FLOOR(intervals_between(recurrences_start, range_start::date, duration)) * duration;
-  END IF;
-
   IF event.until IS NOT NULL AND event.until < recurrences_end THEN
     recurrences_end := event.until;
+  END IF;
+  IF event.count IS NOT NULL AND recurrences_start + event.count * duration < recurrences_end THEN
+    recurrences_end := recurrences_start + event.count * duration;
+  END IF;
+
+  IF range_start > recurrences_start THEN
+    recurrences_start := recurrences_start + FLOOR(intervals_between(recurrences_start, range_start::date, duration)) * duration;
   END IF;
 
   FOR recurrence IN
