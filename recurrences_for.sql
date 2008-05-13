@@ -16,8 +16,8 @@ BEGIN
   IF event.until IS NOT NULL AND event.until < recurrences_end THEN
     recurrences_end := event.until;
   END IF;
-  IF event.count IS NOT NULL AND recurrences_start + event.count * duration < recurrences_end THEN
-    recurrences_end := recurrences_start + event.count * duration;
+  IF event.count IS NOT NULL AND recurrences_start + (event.count - 1) * duration < recurrences_end THEN
+    recurrences_end := recurrences_start + (event.count - 1) * duration;
   END IF;
 
   IF range_start > recurrences_start THEN

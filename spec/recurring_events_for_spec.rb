@@ -209,6 +209,15 @@ describe 'recurring_events_for' do
       ]
     end
 
+    it "should not include additional recurrences when the range starts after the event" do
+      executing([
+        "insert into events (date, frequency, count) values ('2008-04-25', 'daily', 3);",
+        "select date from recurring_events_for('2008-04-27 12:00pm', '2008-04-29 12:00pm', '0', NULL);"
+      ]).should == [
+        ['2008-04-27']
+      ]
+    end
+
     it "should only include limit recurrences of each event" do
       executing([
         "insert into events (date, frequency) values ('2008-04-20', 'daily');",
@@ -380,6 +389,18 @@ describe 'recurring_events_for' do
             ['2008-04-25'],
             ['2008-05-09'],
             ['2008-05-22'],
+            ['2008-06-13'],
+            ['2008-06-19']
+          ]
+        end
+
+        it "should not include additional recurrences when the range starts after the event" do
+          executing([
+            "insert into events (id, date, frequency, count) values (1, '2008-04-25', 'monthly', 5);",
+            "insert into event_recurrences (event_id, week, day) values (1, 2, 5);",
+            "insert into event_recurrences (event_id, week, day) values (1, -2, 4);",
+            "select distinct date from recurring_events_for('2008-06-01 12:00pm', '2008-07-25 12:00pm', '0', NULL);"
+          ]).should == [
             ['2008-06-13'],
             ['2008-06-19']
           ]

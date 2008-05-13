@@ -13,6 +13,7 @@ DECLARE
   start_time TIME;
   next_date DATE;
   duration INTERVAL;
+  recurrences_start DATE := range_start::date;
 BEGIN
   FOR event IN
     SELECT *
@@ -38,10 +39,14 @@ BEGIN
       duration := event.ends_at - event.starts_at;
     END IF;
 
+    IF event.count IS NOT NULL THEN
+      recurrences_start := original_date;
+    END IF;
+
     FOR next_date IN
       SELECT DISTINCT occurrence
         FROM (
-          SELECT * FROM recurrences_for(event, range_start, range_end) AS occurrence
+          SELECT * FROM recurrences_for(event, recurrences_start, range_end) AS occurrence
           UNION SELECT original_date
           LIMIT event.count
         ) AS occurrences
