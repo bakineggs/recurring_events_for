@@ -1,7 +1,8 @@
 CREATE OR REPLACE FUNCTION recurring_events_for(
   range_start TIMESTAMP,
   range_end  TIMESTAMP,
-  tz_offset INTERVAL
+  tz_offset INTERVAL,
+  events_limit INT
 )
   RETURNS SETOF events
   LANGUAGE plpgsql STABLE
@@ -48,6 +49,7 @@ BEGIN
           occurrence <= range_end::date AND
           occurrence + duration >= range_start::date AND
           occurrence NOT IN (SELECT date FROM event_cancellations WHERE event_id = event.id)
+        LIMIT events_limit
     LOOP
       IF event.date IS NOT NULL THEN
         event.date := next_date::date;
