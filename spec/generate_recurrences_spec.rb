@@ -85,6 +85,14 @@ describe 'generate_recurrences' do
       ]
     end
 
+    it "should return the correct week when the event should repeat on the last day of the month and the next month has fewer days" do
+      executing("select * from generate_recurrences('1 month', '2008-04-26', '2008-06-28', NULL, -1, 6);").should == [
+        ['2008-04-26'],
+        ['2008-05-31'],
+        ['2008-06-28']
+      ]
+    end
+
     describe 'by month' do
       it "should return the dates in the correct month" do
         executing("select * from generate_recurrences('1 year', '2008-04-01', '2010-06-30', 5, 3, 2);").should == [

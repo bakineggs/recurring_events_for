@@ -12,6 +12,7 @@ begin
   )
   
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../events.sql').read
+  $db_conn.exec File.open(File.dirname(__FILE__) + '/../days_in_month.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../interval_for.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../intervals_between.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../generate_recurrences.sql').read

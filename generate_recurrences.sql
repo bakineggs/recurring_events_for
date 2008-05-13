@@ -34,7 +34,7 @@ BEGIN
       IF repeat_week > 0 THEN
         current_week := CEIL(extract(day from next_date) / 7);
       ELSE
-        current_week := -CEIL((1 + extract(day from next_date + '1 month'::interval - next_date) - extract(day from next_date)) / 7);
+        current_week := -CEIL((1 + days_in_month(next_date) - extract(day from next_date)) / 7);
       END IF;
       next_date := next_date + (repeat_week - current_week) * '7 days'::interval;
     END IF;
