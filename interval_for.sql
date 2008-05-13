@@ -13,10 +13,6 @@ BEGIN
     RETURN '1 month'::interval;
   ELSIF recurs = 'yearly' THEN
     RETURN '1 year'::interval;
-  ELSIF recurs = 'monthly_by_week_dow' THEN
-    RETURN '28 days'::interval;
-  ELSIF recurs = 'yearly_by_week_dow' THEN
-    RETURN '364 days'::interval;
   ELSE
     RAISE EXCEPTION 'Recurrence % not supported by generate_recurrences()', recurs;
   END IF;

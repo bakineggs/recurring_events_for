@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/helper'
 
 describe 'generate_recurrences' do
   it "should return dates inside of the range" do
-    executing("select * from generate_recurrences('normal', '1 day', '2008-04-20', '2008-04-25', '2008-04-29');").should == [
+    executing("select * from generate_recurrences('1 day', '2008-04-25', '2008-04-29', NULL, NULL, NULL);").should == [
       ['2008-04-25'],
       ['2008-04-26'],
       ['2008-04-27'],
@@ -12,7 +12,7 @@ describe 'generate_recurrences' do
   end
 
   it "should only include dates on the frequency specified" do
-    executing("select * from generate_recurrences('normal', '7 days', '2008-04-01', '2008-04-01', '2008-04-29');").should == [
+    executing("select * from generate_recurrences('7 days', '2008-04-01', '2008-04-29', NULL, NULL, NULL);").should == [
       ['2008-04-01'],
       ['2008-04-08'],
       ['2008-04-15'],
@@ -21,28 +21,48 @@ describe 'generate_recurrences' do
     ]
   end
 
-  it "should not include dates before the original_date" do
-    executing("select * from generate_recurrences('normal', '1 day', '2008-04-25', '2008-04-20', '2008-04-29');").should == [
-      ['2008-04-25'],
-      ['2008-04-26'],
-      ['2008-04-27'],
-      ['2008-04-28'],
-      ['2008-04-29']
-    ]
+  describe 'by day of week' do
+    it "should return dates on the requested day of week" do
+      executing("select * from generate_recurrences('7 days', '2008-05-12', '2008-05-23', NULL, NULL, 4);").should == [
+        ['2008-05-15'],
+        ['2008-05-22']
+      ]
+    end
   end
 
-  it "should return dates whole intervals away from original_date even if start_date isn't" do
-    executing("select * from generate_recurrences('normal', '7 days', '2008-04-01', '2008-04-04', '2008-04-29');").should == [
-      ['2008-04-08'],
-      ['2008-04-15'],
-      ['2008-04-22'],
-      ['2008-04-29']
-    ]
+  describe 'by month' do
+    it "should return the day in the requested month" do
+      executing("select * from generate_recurrences('1 year', '2008-04-15', '2010-06-15', 5, NULL, NULL);").should == [
+        ['2008-05-15'],
+        ['2009-05-15'],
+        ['2010-05-15']
+      ]
+    end
+  end
+
+  describe 'by day of month' do
+    it "should return the dates on the requested day of month" do
+      executing("select * from generate_recurrences('1 month', '2008-04-01', '2008-06-30', NULL, NULL, 15);").should == [
+        ['2008-04-15'],
+        ['2008-05-15'],
+        ['2008-06-15']
+      ]
+    end
+
+    describe 'by month' do
+      it "should return the correct day of month in the correct month" do
+        executing("select * from generate_recurrences('1 year', '2008-04-01', '2010-06-30', 5, NULL, 15);").should == [
+          ['2008-05-15'],
+          ['2009-05-15'],
+          ['2010-05-15']
+        ]
+      end
+    end
   end
 
   describe 'by week and day of week' do
     it "should include the dates on the particular positive offset week's day of week" do
-      executing("select * from generate_recurrences('positive_week_dow', '28 days', '2008-04-15', '2008-04-15', '2008-06-17');").should == [
+      executing("select * from generate_recurrences('1 month', '2008-04-01', '2008-06-30', NULL, 3, 2);").should == [
         ['2008-04-15'],
         ['2008-05-20'],
         ['2008-06-17']
@@ -50,50 +70,29 @@ describe 'generate_recurrences' do
     end
 
     it "should include the dates on the particular negative offset week's day of week" do
-      executing("select * from generate_recurrences('negative_week_dow', '28 days', '2008-04-17', '2008-04-17', '2008-06-19');").should == [
+      executing("select * from generate_recurrences('1 month', '2008-04-01', '2008-06-30', NULL, -2, 4);").should == [
         ['2008-04-17'],
         ['2008-05-22'],
         ['2008-06-19']
       ]
     end
 
-    it "should not get stuck in an infinite loop when the duration does not put us in the next month" do
-      executing("select * from generate_recurrences('positive_week_dow', '28 days', '2008-04-01', '2008-04-01', '2008-06-03');").should == [
-        ['2008-04-01'],
-        ['2008-05-06'],
-        ['2008-06-03']
+    it "should not skip a month if offsetting to the correct day of week puts us in the wrong month" do
+      executing("select * from generate_recurrences('1 month', '2008-05-01', '2008-07-31', NULL, -1, 5);").should == [
+        ['2008-05-30'],
+        ['2008-06-27'],
+        ['2008-07-25']
       ]
     end
 
-    it "should not put the next recurrence in the wrong month if the duration does not put us in the right month next year" do
-      executing("select * from generate_recurrences('positive_week_dow', '364 days', '2008-04-01', '2008-04-01', '2010-04-06');").should == [
-        ['2008-04-01'],
-        ['2009-04-07'],
-        ['2010-04-06']
-      ]
-    end
-
-    it "should not skip the first recurrence if the ceiled intervals to range_start puts us in the next month" do
-      executing("select * from generate_recurrences('positive_week_dow', '28 days', '2008-05-08', '2008-06-10', '2008-08-14');").should == [
-        ['2008-06-12'],
-        ['2008-07-10'],
-        ['2008-08-14']
-      ]
-    end
-
-    it "should not include recurrences before the original_date" do
-      executing("select * from generate_recurrences('positive_week_dow', '28 days', '2008-05-01', '2008-04-01', '2008-06-05');").should == [
-        ['2008-05-01'],
-        ['2008-06-05']
-      ]
-    end
-
-    it "should return the correct week when the day of week is the same as that of the last day of the month" do
-      executing("select * from generate_recurrences('negative_week_dow', '28 days', '2008-04-26', '2008-04-26', '2008-06-28');").should == [
-        ['2008-04-26'],
-        ['2008-05-31'],
-        ['2008-06-28']
-      ]
+    describe 'by month' do
+      it "should return the dates in the correct month" do
+        executing("select * from generate_recurrences('1 year', '2008-04-01', '2010-06-30', 5, 3, 2);").should == [
+          ['2008-05-20'],
+          ['2009-05-19'],
+          ['2010-05-18']
+        ]
+      end
     end
   end
 end
