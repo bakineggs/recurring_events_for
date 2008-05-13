@@ -13,7 +13,7 @@ DECLARE
   start_time TIME;
   next_date DATE;
   duration INTERVAL;
-  recurrences_start DATE := range_start::date;
+  recurrences_start DATE := (range_start + tz_offset)::date;
 BEGIN
   FOR event IN
     SELECT *
@@ -21,8 +21,8 @@ BEGIN
       WHERE
         frequency <> 'once' OR
         (frequency = 'once' AND
-          ((date <= range_end::date AND date >= range_start::date) OR
-          (starts_at + tz_offset <= range_end AND ends_at + tz_offset >= range_start)))
+          ((date <= (range_end + tz_offset)::date AND date >= (range_start + tz_offset)::date) OR
+          (starts_at <= range_end AND ends_at >= range_start)))
   LOOP
     IF event.frequency = 'once' THEN
       RETURN NEXT event;
@@ -31,11 +31,10 @@ BEGIN
 
     IF event.date IS NOT NULL THEN
       original_date := event.date;
-      start_time := '00:00:00'::time;
       duration := '23:59:59'::interval;
     ELSE
-      original_date := (event.starts_at + tz_offset)::date;
-      start_time := (event.starts_at + tz_offset)::time;
+      original_date := event.starts_at::date;
+      start_time := event.starts_at::time;
       duration := event.ends_at - event.starts_at;
     END IF;
 
@@ -46,23 +45,23 @@ BEGIN
     FOR next_date IN
       SELECT DISTINCT occurrence
         FROM (
-          SELECT * FROM recurrences_for(event, recurrences_start, range_end) AS occurrence
+          SELECT * FROM recurrences_for(event, recurrences_start, range_end + tz_offset) AS occurrence
           UNION SELECT original_date
           LIMIT event.count
         ) AS occurrences
         WHERE
-          occurrence <= range_end::date AND
-          occurrence + duration >= range_start::date AND
+          occurrence <= (range_end + tz_offset)::date AND
+          occurrence + duration >= (range_start + tz_offset)::date AND
           occurrence NOT IN (SELECT date FROM event_cancellations WHERE event_id = event.id)
         LIMIT events_limit
     LOOP
       IF event.date IS NOT NULL THEN
         event.date := next_date::date;
       ELSE
-        event.starts_at := next_date + start_time - tz_offset;
-        CONTINUE WHEN event.starts_at + tz_offset > range_end;
+        event.starts_at := next_date + start_time;
+        CONTINUE WHEN event.starts_at > range_end;
         event.ends_at := event.starts_at + duration;
-        CONTINUE WHEN event.ends_at + tz_offset < range_start;
+        CONTINUE WHEN event.ends_at < range_start;
       END IF;
       RETURN NEXT event;
     END LOOP;

@@ -124,27 +124,27 @@ describe 'recurring_events_for' do
 
     it "should take time zone into account when deciding whether or not a date is in the range" do
       executing([
-        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
-        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 7:00am', '-5 hours', NULL);"
+        "insert into events (date, frequency) values ('2008-05-12', 'once');",
+        "select date from recurring_events_for('2008-05-13 4:59am', '2008-05-13 12:00pm', '-5 hours', NULL);"
       ]).should == [
-        ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
+        ['2008-05-12']
       ]
 
       executing([
-        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
-        "select starts_at, ends_at from recurring_events_for('2008-04-26 5:00pm', '2008-04-27 12:00pm', '5 hours', NULL);"
+        "insert into events (date, frequency) values ('2008-05-12', 'once');",
+        "select date from recurring_events_for('2008-05-11 12:00pm', '2008-05-11 7:00pm', '5 hours', NULL);"
       ]).should == [
-        ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
+        ['2008-05-12']
       ]
 
       executing([
-        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
-        "select starts_at, ends_at from recurring_events_for('2008-04-26 8:00am', '2008-04-27 12:00pm', '-5 hours', NULL);"
+        "insert into events (date, frequency) values ('2008-05-12', 'once');",
+        "select date from recurring_events_for('2008-05-13 5:00am', '2008-05-13 12:00pm', '-5 hours', NULL);"
       ]).should == []
 
       executing([
-        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
-        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 4:00pm', '5 hours', NULL);"
+        "insert into events (date, frequency) values ('2008-05-12', 'once');",
+        "select date from recurring_events_for('2008-05-11 12:00pm', '2008-05-11 6:59pm', '5 hours', NULL);"
       ]).should == []
     end
   end
@@ -162,27 +162,27 @@ describe 'recurring_events_for' do
 
       it "should take time zone into account when deciding whether or not a date is in the range" do
         executing([
-          "insert into events (starts_at, ends_at, frequency) values ('2008-04-18 12:00pm', '2008-04-19 12:00pm', 'weekly');",
-          "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 7:00am', '-5 hours', NULL);"
+          "insert into events (date, frequency) values ('2008-05-12', 'weekly');",
+          "select date from recurring_events_for('2008-05-20 4:59am', '2008-05-20 12:00pm', '-5 hours', NULL);"
         ]).should == [
-          ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
+          ['2008-05-19']
         ]
 
         executing([
-          "insert into events (starts_at, ends_at, frequency) values ('2008-04-18 12:00pm', '2008-04-19 12:00pm', 'weekly');",
-          "select starts_at, ends_at from recurring_events_for('2008-04-26 5:00pm', '2008-04-27 12:00pm', '5 hours', NULL);"
+          "insert into events (date, frequency) values ('2008-05-12', 'weekly');",
+          "select date from recurring_events_for('2008-05-18 12:00pm', '2008-05-18 7:00pm', '5 hours', NULL);"
         ]).should == [
-          ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
+          ['2008-05-19']
         ]
 
         executing([
-          "insert into events (starts_at, ends_at, frequency) values ('2008-04-18 12:00pm', '2008-04-19 12:00pm', 'weekly');",
-          "select starts_at, ends_at from recurring_events_for('2008-04-26 8:00am', '2008-04-27 12:00pm', '-5 hours', NULL);"
+          "insert into events (date, frequency) values ('2008-05-12', 'weekly');",
+          "select date from recurring_events_for('2008-05-20 5:00am', '2008-05-20 12:00pm', '-5 hours', NULL);"
         ]).should == []
 
         executing([
-          "insert into events (starts_at, ends_at, frequency) values ('2008-04-18 12:00pm', '2008-04-19 12:00pm', 'weekly');",
-          "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 4:00pm', '5 hours', NULL);"
+          "insert into events (date, frequency) values ('2008-05-12', 'weekly');",
+          "select date from recurring_events_for('2008-05-18 12:00pm', '2008-05-18 6:59pm', '5 hours', NULL);"
         ]).should == []
       end
     end
