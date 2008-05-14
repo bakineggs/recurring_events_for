@@ -147,6 +147,22 @@ describe 'recurring_events_for' do
         "select date from recurring_events_for('2008-05-11 12:00pm', '2008-05-11 6:59pm', '5 hours', NULL);"
       ]).should == []
     end
+
+    it "should take time zone into account when deciding whether or not a day of a time span event is in the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-05-12 2:00am', '2008-05-12 3:00am', 'once');",
+        "select starts_at from recurring_events_for('2008-05-12 1:00am', '2008-05-12 2:00am', '-5 hours', NULL);"
+      ]).should == [
+        ['2008-05-12 02:00:00']
+      ]
+
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-05-12 9:00pm', '2008-05-12 10:00pm', 'once');",
+        "select starts_at from recurring_events_for('2008-05-12 10:00pm', '2008-05-12 11:00pm', '5 hours', NULL);"
+      ]).should == [
+        ['2008-05-12 21:00:00']
+      ]
+    end
   end
 
   describe 'recurring' do
@@ -184,6 +200,22 @@ describe 'recurring_events_for' do
           "insert into events (date, frequency) values ('2008-05-12', 'weekly');",
           "select date from recurring_events_for('2008-05-18 12:00pm', '2008-05-18 6:59pm', '5 hours', NULL);"
         ]).should == []
+      end
+
+      it "should take time zone into account when deciding whether or not a day of a time span event is in the range" do
+        executing([
+          "insert into events (starts_at, ends_at, frequency) values ('2008-05-12 2:00am', '2008-05-12 3:00am', 'weekly');",
+          "select starts_at from recurring_events_for('2008-05-19 1:00am', '2008-05-19 2:00am', '-5 hours', NULL);"
+        ]).should == [
+          ['2008-05-19 02:00:00']
+        ]
+
+        executing([
+          "insert into events (starts_at, ends_at, frequency) values ('2008-05-12 9:00pm', '2008-05-12 10:00pm', 'weekly');",
+          "select starts_at from recurring_events_for('2008-05-19 10:00pm', '2008-05-19 11:00pm', '5 hours', NULL);"
+        ]).should == [
+          ['2008-05-19 21:00:00']
+        ]
       end
     end
 
