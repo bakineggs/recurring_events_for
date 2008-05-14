@@ -112,6 +112,17 @@ describe 'recurring_events_for' do
     ]).should == []
   end
 
+  it "should not include the same date twice" do
+    executing([
+      "insert into events (id, date, frequency) values (1, '2008-05-30', 'monthly');",
+      "insert into event_recurrences (event_id, day) values (1, 30)",
+      "insert into event_recurrences (event_id, week, day) values (1, 5, 5)",
+      "select date from recurring_events_for('2008-05-29 12:00pm', '2008-05-31 12:00pm', 'UTC', NULL)"
+    ]).should == [
+      ['2008-05-30']
+    ]
+  end
+
   describe 'time zone' do
     it "should return starts_at and ends_at in UTC" do
       executing([

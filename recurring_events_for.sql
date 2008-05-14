@@ -44,7 +44,7 @@ BEGIN
     END IF;
 
     FOR next_date IN
-      SELECT DISTINCT occurrence
+      SELECT occurrence
         FROM (
           SELECT * FROM recurrences_for(event, recurrences_start, recurrences_end) AS occurrence
           UNION SELECT original_date
