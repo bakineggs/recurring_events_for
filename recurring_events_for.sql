@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION recurring_events_for(
   range_start TIMESTAMP,
   range_end  TIMESTAMP,
-  tz_offset INTERVAL,
+  time_zone TEXT,
   events_limit INT
 )
   RETURNS SETOF events
@@ -13,8 +13,8 @@ DECLARE
   start_time TIME;
   next_date DATE;
   duration INTERVAL;
-  recurrences_start DATE := CASE WHEN range_start + tz_offset < range_start THEN (range_start + tz_offset)::date ELSE range_start END;
-  recurrences_end DATE := CASE WHEN range_end + tz_offset > range_end THEN (range_end + tz_offset)::date ELSE range_end END;
+  recurrences_start DATE := CASE WHEN (timezone('UTC', range_start) AT TIME ZONE time_zone) < range_start THEN (timezone('UTC', range_start) AT TIME ZONE time_zone)::date ELSE range_start END;
+  recurrences_end DATE := CASE WHEN (timezone('UTC', range_end) AT TIME ZONE time_zone) > range_end THEN (timezone('UTC', range_end) AT TIME ZONE time_zone)::date ELSE range_end END;
 BEGIN
   FOR event IN
     SELECT *
@@ -22,7 +22,7 @@ BEGIN
       WHERE
         frequency <> 'once' OR
         (frequency = 'once' AND
-          ((date <= (range_end + tz_offset)::date AND date >= (range_start + tz_offset)::date) OR
+          ((date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
           (starts_at <= range_end AND ends_at >= range_start)))
   LOOP
     IF event.frequency = 'once' THEN
@@ -57,7 +57,7 @@ BEGIN
         LIMIT events_limit
     LOOP
       IF event.date IS NOT NULL THEN
-        CONTINUE WHEN next_date < (range_start + tz_offset)::date OR next_date > (range_end + tz_offset)::date;
+        CONTINUE WHEN next_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date OR next_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
         event.date := next_date;
       ELSE
         event.starts_at := next_date + start_time;

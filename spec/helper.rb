@@ -11,6 +11,7 @@ begin
     ''
   )
   
+  $db_conn.exec 'SET TIMEZONE TO UTC;'
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../events.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../days_in_month.sql').read
   $db_conn.exec File.open(File.dirname(__FILE__) + '/../interval_for.sql').read
