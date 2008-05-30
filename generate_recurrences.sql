@@ -10,20 +10,23 @@ CREATE OR REPLACE FUNCTION  generate_recurrences(
   LANGUAGE plpgsql IMMUTABLE
   AS $BODY$
 DECLARE
-  next_date DATE := range_start;
+  start_date DATE := range_start;
+  next_date DATE;
+  intervals INT := 0;
   current_month INT;
   current_week INT;
 BEGIN
   IF repeat_month IS NOT NULL THEN
-    next_date := next_date + (((12 + repeat_month - cast(extract(month from next_date) as int)) % 12) || ' months')::interval;
+    start_date := start_date + (((12 + repeat_month - cast(extract(month from start_date) as int)) % 12) || ' months')::interval;
   END IF;
   IF repeat_week IS NULL AND repeat_day IS NOT NULL THEN
     IF duration = '7 days'::interval THEN
-      next_date := next_date + (((7 + repeat_day - cast(extract(dow from next_date) as int)) % 7) || ' days')::interval;
+      start_date := start_date + (((7 + repeat_day - cast(extract(dow from start_date) as int)) % 7) || ' days')::interval;
     ELSE
-      next_date := next_date + (repeat_day - extract(day from next_date) || ' days')::interval;
+      start_date := start_date + (repeat_day - extract(day from start_date) || ' days')::interval;
     END IF;
   END IF;
+  next_date := start_date;
   LOOP
     IF repeat_week IS NOT NULL AND repeat_day IS NOT NULL THEN
       current_month := extract(month from next_date);
@@ -42,7 +45,8 @@ BEGIN
     IF next_date >= range_start THEN
       RETURN NEXT next_date;
     END IF;
-    next_date := next_date + duration;
+    intervals := intervals + 1;
+    next_date := start_date + duration * intervals;
   END LOOP;
 END;
 $BODY$;

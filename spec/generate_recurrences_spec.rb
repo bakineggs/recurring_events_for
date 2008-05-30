@@ -21,6 +21,14 @@ describe 'generate_recurrences' do
     ]
   end
 
+  it "should return dates on the correct day of month when the start is the end of the month" do
+    executing("select * from generate_recurrences('1 month', '2008-05-31', '2008-07-31', NULL, NULL, NULL);").should == [
+      ['2008-05-31'],
+      ['2008-06-30'],
+      ['2008-07-31']
+    ]
+  end
+
   describe 'by day of week' do
     it "should return dates on the requested day of week" do
       executing("select * from generate_recurrences('7 days', '2008-05-12', '2008-05-23', NULL, NULL, 4);").should == [
