@@ -39,7 +39,7 @@ BEGIN
       duration := event.ends_at - event.starts_at;
     END IF;
 
-    IF event.count IS NOT NULL AND recurrences_start > original_date THEN
+    IF event.count IS NOT NULL THEN
       recurrences_start := original_date;
     END IF;
 

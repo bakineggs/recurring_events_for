@@ -1,5 +1,6 @@
 CREATE OR REPLACE FUNCTION  generate_recurrences(
   duration INTERVAL,
+  original_date DATE,
   range_start DATE,
   range_end DATE,
   repeat_month INT,
@@ -10,9 +11,9 @@ CREATE OR REPLACE FUNCTION  generate_recurrences(
   LANGUAGE plpgsql IMMUTABLE
   AS $BODY$
 DECLARE
-  start_date DATE := range_start;
+  start_date DATE := original_date;
   next_date DATE;
-  intervals INT := 0;
+  intervals INT := FLOOR(intervals_between(original_date, range_start, duration));
   current_month INT;
   current_week INT;
 BEGIN
@@ -26,8 +27,8 @@ BEGIN
       start_date := start_date + (repeat_day - extract(day from start_date) || ' days')::interval;
     END IF;
   END IF;
-  next_date := start_date;
   LOOP
+    next_date := start_date + duration * intervals;
     IF repeat_week IS NOT NULL AND repeat_day IS NOT NULL THEN
       current_month := extract(month from next_date);
       next_date := next_date + (((7 + repeat_day - cast(extract(dow from next_date) as int)) % 7) || ' days')::interval;
@@ -42,11 +43,10 @@ BEGIN
       next_date := next_date + (repeat_week - current_week) * '7 days'::interval;
     END IF;
     EXIT WHEN next_date > range_end;
-    IF next_date >= range_start THEN
+    IF next_date >= range_start AND next_date >= original_date THEN
       RETURN NEXT next_date;
     END IF;
     intervals := intervals + 1;
-    next_date := start_date + duration * intervals;
   END LOOP;
 END;
 $BODY$;

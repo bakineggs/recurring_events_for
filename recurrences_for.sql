@@ -20,10 +20,6 @@ BEGIN
     recurrences_end := recurrences_start + (event.count - 1) * duration;
   END IF;
 
-  IF range_start > recurrences_start THEN
-    recurrences_start := recurrences_start + FLOOR(intervals_between(recurrences_start, range_start::date, duration)) * duration;
-  END IF;
-
   FOR recurrence IN
     SELECT event_recurrences.*
       FROM (SELECT NULL) AS foo
@@ -35,6 +31,7 @@ BEGIN
         FROM generate_recurrences(
           duration,
           recurrences_start,
+          range_start::date,
           recurrences_end,
           recurrence.month,
           recurrence.week,

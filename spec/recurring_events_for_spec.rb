@@ -380,6 +380,16 @@ describe 'recurring_events_for' do
         ]
       end
 
+      it "should maintain the day of month for events at the end of the month" do
+        executing([
+          "insert into events (date, frequency) values ('2008-05-31', 'monthly');",
+          "select date from recurring_events_for('2008-06-30 12:00pm', '2008-08-01 12:00pm', 'UTC', NULL);"
+        ]).should == [
+          ['2008-06-30'],
+          ['2008-07-31']
+        ]
+      end
+
       describe 'using a custom day of month' do
         it "should include the event on the specified days" do
           executing([
