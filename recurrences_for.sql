@@ -10,7 +10,7 @@ DECLARE
   recurrence event_recurrences;
   recurrences_start DATE := CASE WHEN event.starts_at IS NOT NULL THEN event.starts_at::date ELSE event.date END;
   recurrences_end DATE := range_end;
-  duration INTERVAL := interval_for(event.frequency);
+  duration INTERVAL := interval_for(event.frequency) * event.separation;
   next_date DATE;
 BEGIN
   IF event.until IS NOT NULL AND event.until < recurrences_end THEN

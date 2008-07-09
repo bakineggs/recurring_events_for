@@ -8,6 +8,7 @@ CREATE TABLE events (
   starts_at timestamp without time zone,
   ends_at timestamp without time zone,
   frequency character varying(255),
+  separation integer not null default 1 constraint positive_separation check (separation > 0),
   count integer,
   "until" date
 );

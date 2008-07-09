@@ -276,6 +276,17 @@ describe 'recurring_events_for' do
       ]
     end
 
+    it "should put separation in between each recurrence" do
+      executing([
+        "insert into events (date, frequency, separation) values ('2008-04-25', 'daily', 2);",
+        "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-30 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25'],
+        ['2008-04-27'],
+        ['2008-04-29']
+      ]
+    end
+
     describe 'mutliple recurrence rules' do
       it "should only include events for count recurrences" do
         executing([
@@ -306,6 +317,21 @@ describe 'recurring_events_for' do
           ['2008-04-25'],
           ['2008-05-07'],
           ['2008-05-14']
+        ]
+      end
+
+      it "should put separation in between each recurrence" do
+        executing([
+          "insert into events (id, date, frequency, separation) values (1, '2008-04-25', 'monthly', 2);",
+          "insert into event_recurrences (event_id, day) values (1, 28);",
+          "insert into event_recurrences (event_id, day) values (1, 4);",
+          "select distinct date from recurring_events_for('2008-04-01 12:00pm', '2008-08-25 12:00pm', 'UTC', NULL);"
+        ]).should == [
+          ['2008-04-25'],
+          ['2008-04-28'],
+          ['2008-06-04'],
+          ['2008-06-28'],
+          ['2008-08-04']
         ]
       end
     end
