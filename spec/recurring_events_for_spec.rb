@@ -289,6 +289,25 @@ describe 'recurring_events_for' do
           ['2008-05-04']
         ]
       end
+
+      it "should only include limit recurrences of each event" do
+        executing([
+          "insert into events (id, date, frequency) values (1, '2008-04-20', 'monthly');",
+          "insert into event_recurrences (event_id, day) values (1, 28);",
+          "insert into event_recurrences (event_id, day) values (1, 4);",
+          "insert into events (id, date, frequency) values (2, '2008-04-25', 'monthly');",
+          "insert into event_recurrences (event_id, day) values (2, 14);",
+          "insert into event_recurrences (event_id, day) values (2, 7);",
+          "select date from recurring_events_for('2008-04-19 12:00pm', '2009-04-29 12:00pm', 'UTC', 3)"
+        ]).should == [
+          ['2008-04-20'],
+          ['2008-04-28'],
+          ['2008-05-04'],
+          ['2008-04-25'],
+          ['2008-05-07'],
+          ['2008-05-14']
+        ]
+      end
     end
 
     describe 'cancellations' do
