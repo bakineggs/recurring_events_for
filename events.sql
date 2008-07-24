@@ -2,12 +2,15 @@ DROP TABLE IF EXISTS event_cancellations CASCADE;
 DROP TABLE IF EXISTS event_recurrences CASCADE;
 DROP TABLE IF EXISTS events CASCADE;
 
+DROP DOMAIN IF EXISTS frequency CASCADE;
+CREATE DOMAIN frequency AS CHARACTER VARYING CHECK ( VALUE IN ( 'once', 'daily', 'weekly', 'monthly', 'yearly' ) );
+
 CREATE TABLE events (
   id serial PRIMARY KEY,
   date date,
   starts_at timestamp without time zone,
   ends_at timestamp without time zone,
-  frequency character varying(255),
+  frequency frequency,
   separation integer not null default 1 constraint positive_separation check (separation > 0),
   count integer,
   "until" date
