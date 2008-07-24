@@ -1,7 +1,7 @@
 CREATE OR REPLACE FUNCTION recurring_events_for(
   range_start TIMESTAMP,
   range_end  TIMESTAMP,
-  time_zone TEXT,
+  time_zone CHARACTER VARYING,
   events_limit INT
 )
   RETURNS SETOF events

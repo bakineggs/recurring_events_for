@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION  interval_for(
-  recurs TEXT
+  recurs frequency
 )
   RETURNS INTERVAL
   LANGUAGE plpgsql IMMUTABLE
