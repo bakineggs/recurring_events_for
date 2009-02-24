@@ -36,7 +36,7 @@ BEGIN
       duration := '23:59:59'::interval;
     ELSIF event.start_date IS NOT NULL AND event.end_date IS NOT NULL THEN
       original_date := event.start_date;
-      duration := event.start_date - event.end_date;
+      duration := timezone('UTC', event.end_date) - timezone('UTC', event.start_date);
     ELSE
       original_date := event.starts_at::date;
       start_time := event.starts_at::time;
@@ -64,7 +64,10 @@ BEGIN
         CONTINUE WHEN next_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date OR next_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
         event.date := next_date;
       ELSIF event.start_date IS NOT NULL AND event.end_date IS NOT NULL THEN
-        CONTINUE WHEN end_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date OR start_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
+        event.start_date := next_date;
+        CONTINUE WHEN event.start_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
+        event.end_date := next_date + duration;
+        CONTINUE WHEN event.end_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date;
       ELSE
         event.starts_at := next_date + start_time;
         CONTINUE WHEN event.starts_at > range_end;

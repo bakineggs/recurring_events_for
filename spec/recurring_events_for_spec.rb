@@ -260,6 +260,20 @@ describe 'recurring_events_for' do
         ]).should == []
       end
 
+      it "should take time zone into account when deciding whether a day of a multi-day event is in the range" do
+        executing([
+          "insert into events (start_date, end_date, frequency) values ('2008-05-12', '2008-05-13', 'weekly');",
+          "select start_date, end_date from recurring_events_for('2008-05-18 7:00pm', '2008-05-19 12:00pm', 'America/Chicago', NULL);"
+        ]).should == [
+          ['2008-05-19', '2008-05-20']
+        ]
+
+        executing([
+          "insert into events (start_date, end_date, frequency) values ('2008-05-12', '2008-05-13', 'weekly');",
+          "select start_date, end_date from recurring_events_for('2008-05-18 12:00pm', '2008-05-18 6:59pm', 'America/Chicago', NULL);"
+        ]).should == []
+      end
+
       it "should take time zone into account when deciding whether or not a day of a time span event is in the range" do
         executing([
           "insert into events (starts_at, ends_at, frequency) values ('2008-05-12 2:00am', '2008-05-12 3:00am', 'weekly');",
