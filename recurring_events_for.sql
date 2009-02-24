@@ -34,7 +34,7 @@ BEGIN
     -- All-day event
     IF event.start_date IS NOT NULL AND event.end_date IS NULL THEN
       original_date := event.start_date;
-      duration := '23:59:59'::interval;
+      duration := '1 day'::interval;
     -- Multi-day event
     ELSIF event.start_date IS NOT NULL AND event.end_date IS NOT NULL THEN
       original_date := event.start_date;
