@@ -1,115 +1,119 @@
 require File.dirname(__FILE__) + '/helper'
 
 describe 'recurring_events_for' do
-  it "should include events on a date inside of the range" do
-    executing([
-      "insert into events (date, frequency) values ('2008-04-25', 'once');",
-      "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25']
-    ]
+  describe 'on single day events:' do
+    it "should include events on a date inside of the range" do
+      executing([
+        "insert into events (date, frequency) values ('2008-04-25', 'once');",
+        "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25']
+      ]
+    end
+
+    it "should include events on the date of the start of the range" do
+      executing([
+        "insert into events (date, frequency) values ('2008-04-25', 'once');",
+        "select date from recurring_events_for('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25']
+      ]
+    end
+
+    it "should include events on the date of the end of the range" do
+      executing([
+        "insert into events (date, frequency) values ('2008-04-25', 'once');",
+        "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25']
+      ]
+    end
+
+    it "should include events on the date of the end of the range when the range ends at midnight" do
+      executing([
+        "insert into events (date, frequency) values ('2008-04-25', 'once');",
+        "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00am', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25']
+      ]
+    end
+
+    it "should not include events on a date outside of the range" do
+      executing([
+        "insert into events (date, frequency) values ('2008-04-23', 'once');",
+        "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
+      ]).should == []
+    end
   end
 
-  it "should include events on the date of the start of the range" do
-    executing([
-      "insert into events (date, frequency) values ('2008-04-25', 'once');",
-      "select date from recurring_events_for('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25']
-    ]
-  end
+  describe 'on timespan events:' do
+    it "should include events starting and ending inside the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
+      ]
+    end
 
-  it "should include events on the date of the end of the range" do
-    executing([
-      "insert into events (date, frequency) values ('2008-04-25', 'once');",
-      "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25']
-    ]
-  end
+    it "should include events starting inside the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-27 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25 12:00:00', '2008-04-27 12:00:00']
+      ]
+    end
 
-  it "should include events on the date of the end of the range when the range ends at midnight" do
-    executing([
-      "insert into events (date, frequency) values ('2008-04-25', 'once');",
-      "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00am', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25']
-    ]
-  end
+    it "should include events ending inside the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-25 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-24 12:00:00', '2008-04-26 12:00:00']
+      ]
+    end
 
-  it "should not include events on a date outside of the range" do
-    executing([
-      "insert into events (date, frequency) values ('2008-04-23', 'once');",
-      "select date from recurring_events_for('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
-    ]).should == []
-  end
+    it "should include events starting at the end of the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
+      ]
+    end
 
-  it "should include events starting and ending inside the range" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
-    ]
-  end
+    it "should include events ending at the start of the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-26 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
+      ]
+    end
 
-  it "should include events starting inside the range" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-27 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25 12:00:00', '2008-04-27 12:00:00']
-    ]
-  end
+    it "should include events encapsulating the range" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-24 12:00pm', '2008-04-27 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-24 12:00:00', '2008-04-27 12:00:00']
+      ]
+    end
 
-  it "should include events ending inside the range" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-24 12:00pm', '2008-04-26 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-25 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-24 12:00:00', '2008-04-26 12:00:00']
-    ]
-  end
+    it "should not include events ending before the range start" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-26 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
+      ]).should == []
+    end
 
-  it "should include events starting at the end of the range" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
-    ]
-  end
-
-  it "should include events ending at the start of the range" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-26 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-25 12:00:00', '2008-04-26 12:00:00']
-    ]
-  end
-
-  it "should include events encapsulating the range" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-24 12:00pm', '2008-04-27 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-25 12:00pm', '2008-04-26 12:00pm', 'UTC', NULL);"
-    ]).should == [
-      ['2008-04-24 12:00:00', '2008-04-27 12:00:00']
-    ]
-  end
-
-  it "should not include events ending before the range start" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-26 12:00pm', '2008-04-27 12:00pm', 'UTC', NULL);"
-    ]).should == []
-  end
-
-  it "should not include events starting after the range end" do
-    executing([
-      "insert into events (starts_at, ends_at, frequency) values ('2008-04-26 12:00pm', '2008-04-27 12:00pm', 'once');",
-      "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
-    ]).should == []
+    it "should not include events starting after the range end" do
+      executing([
+        "insert into events (starts_at, ends_at, frequency) values ('2008-04-26 12:00pm', '2008-04-27 12:00pm', 'once');",
+        "select starts_at, ends_at from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == []
+    end
   end
 
   it "should not include the same date twice" do
