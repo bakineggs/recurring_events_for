@@ -22,8 +22,8 @@ BEGIN
       WHERE
         frequency <> 'once' OR
         (frequency = 'once' AND
-          ((date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
-           (start_date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND end_date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
+          ((start_date IS NOT NULL AND end_date IS NOT NULL AND start_date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND end_date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
+           (start_date IS NOT NULL AND start_date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND start_date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
            (starts_at <= range_end AND ends_at >= range_start)))
   LOOP
     IF event.frequency = 'once' THEN
@@ -31,12 +31,15 @@ BEGIN
       CONTINUE;
     END IF;
 
-    IF event.date IS NOT NULL THEN
-      original_date := event.date;
+    -- All-day event
+    IF event.start_date IS NOT NULL AND event.end_date IS NULL THEN
+      original_date := event.start_date;
       duration := '23:59:59'::interval;
+    -- Multi-day event
     ELSIF event.start_date IS NOT NULL AND event.end_date IS NOT NULL THEN
       original_date := event.start_date;
       duration := timezone('UTC', event.end_date) - timezone('UTC', event.start_date);
+    -- Timespan event
     ELSE
       original_date := event.starts_at::date;
       start_time := event.starts_at::time;
@@ -60,20 +63,26 @@ BEGIN
           occurrence NOT IN (SELECT date FROM event_cancellations WHERE event_id = event.id)
         LIMIT events_limit
     LOOP
-      IF event.date IS NOT NULL THEN
+      -- All-day event
+      IF event.start_date IS NOT NULL AND event.end_date IS NULL THEN
         CONTINUE WHEN next_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date OR next_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
-        event.date := next_date;
+        event.start_date := next_date;
+
+      -- Multi-day event
       ELSIF event.start_date IS NOT NULL AND event.end_date IS NOT NULL THEN
         event.start_date := next_date;
         CONTINUE WHEN event.start_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
         event.end_date := next_date + duration;
         CONTINUE WHEN event.end_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date;
+
+      -- Timespan event
       ELSE
         event.starts_at := next_date + start_time;
         CONTINUE WHEN event.starts_at > range_end;
         event.ends_at := event.starts_at + duration;
         CONTINUE WHEN event.ends_at < range_start;
       END IF;
+
       RETURN NEXT event;
     END LOOP;
   END LOOP;
