@@ -28,19 +28,23 @@
       instead of returning them all and then limiting what was selected. Pass
       in NULL for this parameter if you do not want a limit.
 
-  The function returns one row for each occurrence of an event. The date or
-  starts_at/ends_at column(s) will be the date/time of that occurrence.
+  The function returns one row for each occurrence of an event. The events
+  table columns start_date/end_date or starts_at/ends_at will be the date/time
+  of that occurence.
 
 == How Events And Recurrence Patterns Are Stored
 
   events table:
 
-    date (DATE), starts_at (TIMESTAMP), ends_at (TIMESTAMP):
-      The first (or only) date/time that an event occurs should be stored in
-      the date column or the combination of starts_at and ends_at columns, but
-      not both options. The date column should be used for all day events,
-      while the starts_at and ends_at columns should be used for events that
-      start and end at specific times.
+    start_date (DATE), end_date (DATE):
+      The first (or only) date that an event occurs should be stored in the
+      start_date column. For multi-day events, set the end_date column to
+      the final day of the event.
+
+    starts_at (TIMESTAMP), ends_at (TIMESTAMP):
+      The first (or only) timespan that an event occurs should be stored in
+      the starts_at and ends_at columns. These columns should not be used if
+      the start_date or end_date columns are also in use.
 
     frequency (CHARACTER VARYING):
       This column specifies the frequency at which this event recurs. If no
