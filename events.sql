@@ -8,6 +8,8 @@ CREATE DOMAIN frequency AS CHARACTER VARYING CHECK ( VALUE IN ( 'once', 'daily',
 CREATE TABLE events (
   id serial PRIMARY KEY,
   date date,
+  start_date date,
+  end_date date,
   starts_at timestamp without time zone,
   ends_at timestamp without time zone,
   frequency frequency,
