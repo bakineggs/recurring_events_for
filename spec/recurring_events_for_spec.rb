@@ -61,7 +61,7 @@ describe 'recurring_events_for' do
         "insert into events (start_date, end_date, frequency) values ('2008-04-20', '2008-04-24', 'once');",
         "select start_date, end_date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
       ]).should == [
-        ['2008-04-20', '2008-04-25']
+        ['2008-04-20', '2008-04-24']
       ]
     end
 
@@ -72,6 +72,20 @@ describe 'recurring_events_for' do
       ]).should == [
         ['2008-04-25', '2008-04-26']
       ]
+    end
+
+    it "should not include events starting after the range ends" do
+      executing([
+        "insert into events (start_date, end_date, frequency) values ('2008-04-26', '2008-04-28', 'once');",
+        "select start_date, end_date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == []
+    end
+
+    it "should not include events ending before the range begins" do
+      executing([
+        "insert into events (start_date, end_date, frequency) values ('2008-04-20', '2008-04-23', 'once');",
+        "select start_date, end_date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == []
     end
   end
 

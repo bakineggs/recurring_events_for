@@ -23,7 +23,8 @@ BEGIN
         frequency <> 'once' OR
         (frequency = 'once' AND
           ((date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
-          (starts_at <= range_end AND ends_at >= range_start)))
+           (start_date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND end_date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
+           (starts_at <= range_end AND ends_at >= range_start)))
   LOOP
     IF event.frequency = 'once' THEN
       RETURN NEXT event;
@@ -33,6 +34,9 @@ BEGIN
     IF event.date IS NOT NULL THEN
       original_date := event.date;
       duration := '23:59:59'::interval;
+    ELSIF event.start_date IS NOT NULL AND event.end_date IS NOT NULL THEN
+      original_date := event.start_date;
+      duration := event.start_date - event.end_date;
     ELSE
       original_date := event.starts_at::date;
       start_time := event.starts_at::time;
@@ -59,6 +63,8 @@ BEGIN
       IF event.date IS NOT NULL THEN
         CONTINUE WHEN next_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date OR next_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
         event.date := next_date;
+      ELSIF event.start_date IS NOT NULL AND event.end_date IS NOT NULL THEN
+        CONTINUE WHEN end_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date OR start_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
       ELSE
         event.starts_at := next_date + start_time;
         CONTINUE WHEN event.starts_at > range_end;
