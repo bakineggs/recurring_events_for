@@ -46,6 +46,35 @@ describe 'recurring_events_for' do
     end
   end
 
+  describe 'on multi-day events:' do
+    it "should include events starting and ending on the endpoints of the range" do
+      executing([
+        "insert into events (start_date, end_date, frequency) values ('2008-04-24', '2008-04-25', 'once');",
+        "select start_date, end_date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-24', '2008-04-25']
+      ]
+    end
+
+    it "should include events ending on the day the range begins" do
+      executing([
+        "insert into events (start_date, end_date, frequency) values ('2008-04-20', '2008-04-24', 'once');",
+        "select start_date, end_date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-20', '2008-04-25']
+      ]
+    end
+
+    it "should include events starting on the day the range ends" do
+      executing([
+        "insert into events (start_date, end_date, frequency) values ('2008-04-25', '2008-04-26', 'once');",
+        "select start_date, end_date from recurring_events_for('2008-04-24 12:00pm', '2008-04-25 12:00pm', 'UTC', NULL);"
+      ]).should == [
+        ['2008-04-25', '2008-04-26']
+      ]
+    end
+  end
+
   describe 'on timespan events:' do
     it "should include events starting and ending inside the range" do
       executing([
