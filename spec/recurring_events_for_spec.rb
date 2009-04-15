@@ -274,6 +274,16 @@ describe 'recurring_events_for' do
         ]).should == []
       end
 
+      it "should take daylight savings time into account when deciding whether a day of a multi-day event is in the range" do
+        executing([
+          "SET TIMEZONE TO 'America/Chicago';",
+          "insert into events (starts_on, ends_on, frequency) values ('2009-02-24', '2009-03-09', 'yearly');",
+          "select starts_on, ends_on from recurring_events_for('2009-02-24 06:00:00.000000', '2009-02-25 05:59:59.000000', E'America/Chicago', NULL);"
+        ]).should == [
+          ['2009-02-24', '2009-03-09']
+        ]
+      end
+
       it "should take time zone into account when deciding whether or not a day of a time span event is in the range" do
         executing([
           "insert into events (starts_at, ends_at, frequency) values ('2008-05-12 2:00am', '2008-05-12 3:00am', 'weekly');",
