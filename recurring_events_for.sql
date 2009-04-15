@@ -38,7 +38,7 @@ BEGIN
     -- Multi-day event
     ELSIF event.starts_on IS NOT NULL AND event.ends_on IS NOT NULL THEN
       original_date := event.starts_on;
-      duration := timezone('UTC', event.ends_on) - timezone('UTC', event.starts_on);
+      duration := timezone(time_zone, event.ends_on) - timezone(time_zone, event.starts_on);
     -- Timespan event
     ELSE
       original_date := event.starts_at::date;
