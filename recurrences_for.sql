@@ -31,6 +31,7 @@ BEGIN
         FROM generate_recurrences(
           duration,
           recurrences_start,
+          COALESCE(event.ends_at::date, event.ends_on),
           range_start::date,
           recurrences_end,
           recurrence.month,
