@@ -30,7 +30,9 @@
 
   The function returns one row for each occurrence of an event. The events
   table columns starts_on/ends_on or starts_at/ends_at will be the date/time
-  of that occurence.
+  of that occurrence. starts_at/ends_at will be adjusted for DST such that
+  the event will always start at the same time in the event's time zone. This
+  means that the utc time of the event will change over DST boundaries.
 
 == How Events And Recurrence Patterns Are Stored
 

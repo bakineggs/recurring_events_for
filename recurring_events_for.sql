@@ -10,9 +10,14 @@ CREATE OR REPLACE FUNCTION recurring_events_for(
 DECLARE
   event events;
   original_date DATE;
+  original_date_in_zone DATE;
   start_time TIME;
+  start_time_in_zone TIME;
   next_date DATE;
+  next_time_in_zone TIME;
   duration INTERVAL;
+  orig_date_next_time TIMESTAMP;
+  time_offset INTERVAL;
   recurrences_start DATE := CASE WHEN (timezone('UTC', range_start) AT TIME ZONE time_zone) < range_start THEN (timezone('UTC', range_start) AT TIME ZONE time_zone)::date ELSE range_start END;
   recurrences_end DATE := CASE WHEN (timezone('UTC', range_end) AT TIME ZONE time_zone) > range_end THEN (timezone('UTC', range_end) AT TIME ZONE time_zone)::date ELSE range_end END;
 BEGIN
@@ -42,7 +47,9 @@ BEGIN
     -- Timespan event
     ELSE
       original_date := event.starts_at::date;
+      original_date_in_zone := (event.starts_at::timestamptz AT TIME ZONE event.timezone_name)::date;
       start_time := event.starts_at::time;
+      start_time_in_zone := (event.starts_at::timestamptz AT time ZONE event.timezone_name)::time;
       duration := event.ends_at - event.starts_at;
     END IF;
 
@@ -77,7 +84,10 @@ BEGIN
 
       -- Timespan event
       ELSE
-        event.starts_at := next_date + start_time;
+        next_time_in_zone := ((next_date + start_time)::timestamptz at time zone event.timezone_name)::time;
+        time_offset := (original_date_in_zone + next_time_in_zone) - (original_date_in_zone + start_time_in_zone);
+        event.starts_at := next_date + start_time + time_offset;
+
         CONTINUE WHEN event.starts_at > range_end;
         event.ends_at := event.starts_at + duration;
         CONTINUE WHEN event.ends_at < range_start;

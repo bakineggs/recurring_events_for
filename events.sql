@@ -14,7 +14,8 @@ CREATE TABLE events (
   frequency frequency,
   separation integer not null default 1 constraint positive_separation check (separation > 0),
   count integer,
-  "until" date
+  "until" date,
+  timezone_name text not null default 'Etc/UTC'
 );
 
 CREATE TABLE event_recurrences (
