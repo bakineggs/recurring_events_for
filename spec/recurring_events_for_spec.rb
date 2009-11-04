@@ -340,6 +340,17 @@ describe 'recurring_events_for' do
             ['2010-03-14 21:00:00', '2010-03-14 22:00:00']
           ]
         end
+
+        it "should work even if the DB's timezone isn't in UTC" do
+          executing([
+            "SET TIMEZONE TO 'America/Chicago';",
+            "insert into events (starts_at, ends_at, frequency, timezone_name) values ('2009-03-07 9:00pm', '2009-03-07 10:00pm', 'daily', 'America/Chicago');",
+            "select starts_at, ends_at from recurring_events_for('2009-03-07 7:00pm', '2009-03-08 11:59pm', 'America/Chicago', NULL);"
+          ]).should == [
+            ['2009-03-07 21:00:00', '2009-03-07 22:00:00'],
+            ['2009-03-08 22:00:00', '2009-03-08 23:00:00']
+          ]
+        end
       end
 
       describe 'that do not observe dst' do

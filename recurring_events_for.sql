@@ -47,9 +47,9 @@ BEGIN
     -- Timespan event
     ELSE
       original_date := event.starts_at::date;
-      original_date_in_zone := (event.starts_at::timestamptz AT TIME ZONE event.timezone_name)::date;
+      original_date_in_zone := (timezone('UTC', event.starts_at) AT TIME ZONE event.timezone_name)::date;
       start_time := event.starts_at::time;
-      start_time_in_zone := (event.starts_at::timestamptz AT time ZONE event.timezone_name)::time;
+      start_time_in_zone := (timezone('UTC', event.starts_at) AT time ZONE event.timezone_name)::time;
       duration := event.ends_at - event.starts_at;
     END IF;
 
@@ -84,7 +84,7 @@ BEGIN
 
       -- Timespan event
       ELSE
-        next_time_in_zone := ((next_date + start_time)::timestamptz at time zone event.timezone_name)::time;
+        next_time_in_zone := (timezone('UTC', (next_date + start_time)) at time zone event.timezone_name)::time;
         time_offset := (original_date_in_zone + next_time_in_zone) - (original_date_in_zone + start_time_in_zone);
         event.starts_at := next_date + start_time + time_offset;
 
