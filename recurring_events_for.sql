@@ -86,7 +86,7 @@ BEGIN
       ELSE
         next_time_in_zone := (timezone('UTC', (next_date + start_time)) at time zone event.timezone_name)::time;
         time_offset := (original_date_in_zone + next_time_in_zone) - (original_date_in_zone + start_time_in_zone);
-        event.starts_at := next_date + start_time + time_offset;
+        event.starts_at := next_date + start_time - time_offset;
 
         CONTINUE WHEN event.starts_at > range_end;
         event.ends_at := event.starts_at + duration;

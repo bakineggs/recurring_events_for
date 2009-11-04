@@ -301,13 +301,13 @@ describe 'recurring_events_for' do
       end
 
       describe 'that observe dst' do
-        it "should adjust the start time and end time of the event to be later when DST starts" do
+        it "should adjust the start time and end time of the event to be earlier when DST starts" do
           executing([
             "insert into events (starts_at, ends_at, frequency, timezone_name) values ('2009-03-07 9:00pm', '2009-03-07 10:00pm', 'daily', 'America/Chicago');",
             "select starts_at, ends_at from recurring_events_for('2009-03-07 7:00pm', '2009-03-08 11:59pm', 'America/Chicago', NULL);"
           ]).should == [
             ['2009-03-07 21:00:00', '2009-03-07 22:00:00'],
-            ['2009-03-08 22:00:00', '2009-03-08 23:00:00']
+            ['2009-03-08 20:00:00', '2009-03-08 21:00:00']
           ]
         end
 
@@ -316,18 +316,18 @@ describe 'recurring_events_for' do
             "insert into events (starts_at, ends_at, frequency, timezone_name) values ('2009-03-07 9:00pm', '2009-03-07 10:00pm', 'daily', 'America/Chicago');",
             "select starts_at, ends_at from recurring_events_for('2009-10-31 7:00pm', '2009-11-01 11:59pm', 'America/Chicago', NULL);"
           ]).should == [
-            ['2009-10-31 22:00:00', '2009-10-31 23:00:00'],
+            ['2009-10-31 20:00:00', '2009-10-31 21:00:00'],
             ['2009-11-01 21:00:00', '2009-11-01 22:00:00']
           ]
         end
 
-        it "should adjust the start time and end time of the event to be earlier when DST ends" do
+        it "should adjust the start time and end time of the event to be later when DST ends" do
           executing([
             "insert into events (starts_at, ends_at, frequency, timezone_name) values ('2009-10-31 9:00pm', '2009-10-31 10:00pm', 'daily', 'America/Chicago');",
             "select starts_at, ends_at from recurring_events_for('2009-10-31 7:00pm', '2009-11-1 11:59pm', 'America/Chicago', NULL);"
           ]).should == [
             ['2009-10-31 21:00:00', '2009-10-31 22:00:00'],
-            ['2009-11-01 20:00:00', '2009-11-01 21:00:00']
+            ['2009-11-01 22:00:00', '2009-11-01 23:00:00']
           ]
         end
 
@@ -336,7 +336,7 @@ describe 'recurring_events_for' do
             "insert into events (starts_at, ends_at, frequency, timezone_name) values ('2009-10-31 9:00pm', '2009-10-31 10:00pm', 'daily', 'America/Chicago');",
             "select starts_at, ends_at from recurring_events_for('2010-03-13 7:00pm', '2010-03-14 11:59pm', 'America/Chicago', NULL);"
           ]).should == [
-            ['2010-03-13 20:00:00', '2010-03-13 21:00:00'],
+            ['2010-03-13 22:00:00', '2010-03-13 23:00:00'],
             ['2010-03-14 21:00:00', '2010-03-14 22:00:00']
           ]
         end
@@ -348,7 +348,7 @@ describe 'recurring_events_for' do
             "select starts_at, ends_at from recurring_events_for('2009-03-07 7:00pm', '2009-03-08 11:59pm', 'America/Chicago', NULL);"
           ]).should == [
             ['2009-03-07 21:00:00', '2009-03-07 22:00:00'],
-            ['2009-03-08 22:00:00', '2009-03-08 23:00:00']
+            ['2009-03-08 20:00:00', '2009-03-08 21:00:00']
           ]
         end
       end
