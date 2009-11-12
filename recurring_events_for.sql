@@ -16,7 +16,6 @@ DECLARE
   next_date DATE;
   next_time_in_zone TIME;
   duration INTERVAL;
-  orig_date_next_time TIMESTAMP;
   time_offset INTERVAL;
   recurrences_start DATE := CASE WHEN (timezone('UTC', range_start) AT TIME ZONE time_zone) < range_start THEN (timezone('UTC', range_start) AT TIME ZONE time_zone)::date ELSE range_start END;
   recurrences_end DATE := CASE WHEN (timezone('UTC', range_end) AT TIME ZONE time_zone) > range_end THEN (timezone('UTC', range_end) AT TIME ZONE time_zone)::date ELSE range_end END;
