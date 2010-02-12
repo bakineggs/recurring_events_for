@@ -1,15 +1,7 @@
-require 'postgres'
+require 'pg'
 
 begin
-  $db_conn = PGconn.open(
-    'localhost',
-    5432,
-    '',
-    '',
-    'recurring_events_test',
-    '',
-    ''
-  )
+  $db_conn = PGconn.open(:dbname => 'recurring_events_test')
 
   $db_conn.exec 'SET TIMEZONE TO UTC;'
   $db_conn.exec File.read(File.dirname(__FILE__) + '/../events.sql')
@@ -29,8 +21,8 @@ def executing(statements)
   results = []
   begin
     [statements].flatten.each do |statement|
-      $db_conn.exec(statement).each do |result|
-        results.push(result)
+      $db_conn.query(statement).each do |result|
+        results.push(result.values)
       end.clear
     end
   ensure
