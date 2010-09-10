@@ -127,6 +127,13 @@
   have Ruby and Rspec installed, you can run the tests by executing "spec spec"
   in the top level directory of this project.
 
+  You may have to manually create the DB 'recurring_events_test'.
+
+  You may also have to execute the following if the system complains about
+  the language not existing:
+
+  CREATE PROCEDURAL LANGUAGE plpgsql;
+
 == Credits
 
   This function was originally posted on David Wheeler (justatheory)'s blog:
