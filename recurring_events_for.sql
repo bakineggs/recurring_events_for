@@ -61,6 +61,7 @@ BEGIN
         FROM (
           SELECT * FROM recurrences_for(event, recurrences_start, recurrences_end) AS occurrence
           UNION SELECT original_date
+          ORDER BY occurrence
           LIMIT event.count
         ) AS occurrences
         WHERE
