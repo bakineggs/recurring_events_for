@@ -1,12 +1,11 @@
-CREATE OR REPLACE FUNCTION recurring_events_for(
-  range_start TIMESTAMP,
-  range_end  TIMESTAMP,
-  time_zone CHARACTER VARYING,
-  events_limit INT
+CREATE OR REPLACE FUNCTION public.recurring_events_for(
+    range_start timestamp without time zone,
+    range_end timestamp without time zone,
+    time_zone character varying,
+    events_limit integer
 )
-  RETURNS SETOF events
-  LANGUAGE plpgsql STABLE
-  AS $BODY$
+  RETURNS SETOF events AS
+$BODY$
 DECLARE
   event events;
   original_date DATE;
@@ -39,8 +38,10 @@ BEGIN
     IF event.starts_on IS NOT NULL AND event.ends_on IS NULL THEN
       original_date := event.starts_on;
       duration := '1 day'::interval;
+
     -- Multi-day event
     ELSIF event.starts_on IS NOT NULL AND event.ends_on IS NOT NULL THEN
+
       original_date := event.starts_on;
       duration := timezone(time_zone, event.ends_on) - timezone(time_zone, event.starts_on);
     -- Timespan event
@@ -56,11 +57,12 @@ BEGIN
       recurrences_start := original_date;
     END IF;
 
-    FOR next_date IN
+    FOR next_date IN	
       SELECT occurrence
         FROM (
           SELECT * FROM recurrences_for(event, recurrences_start, recurrences_end) AS occurrence
           UNION SELECT original_date
+          ORDER BY occurrence
           LIMIT event.count
         ) AS occurrences
         WHERE
@@ -91,10 +93,13 @@ BEGIN
         event.ends_at := event.starts_at + duration;
         CONTINUE WHEN event.ends_at < range_start;
       END IF;
-
+	  
       RETURN NEXT event;
     END LOOP;
   END LOOP;
   RETURN;
 END;
-$BODY$;
+$BODY$
+  LANGUAGE plpgsql STABLE
+  COST 100
+  ROWS 1000;

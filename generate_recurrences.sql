@@ -1,16 +1,14 @@
-CREATE OR REPLACE FUNCTION  generate_recurrences(
-  duration INTERVAL,
-  original_start_date DATE,
-  original_end_date DATE,
-  range_start DATE,
-  range_end DATE,
-  repeat_month INT,
-  repeat_week INT,
-  repeat_day INT
-)
-  RETURNS setof DATE
-  LANGUAGE plpgsql IMMUTABLE
-  AS $BODY$
+CREATE OR REPLACE FUNCTION public.generate_recurrences(
+    duration interval,
+    original_start_date date,
+    original_end_date date,
+    range_start date,
+    range_end date,
+    repeat_month integer,
+    repeat_week integer,
+    repeat_day integer)
+  RETURNS SETOF date AS
+$BODY$
 DECLARE
   start_date DATE := original_start_date;
   next_date DATE;
@@ -21,11 +19,11 @@ BEGIN
   IF repeat_month IS NOT NULL THEN
     start_date := start_date + (((12 + repeat_month - cast(extract(month from start_date) as int)) % 12) || ' months')::interval;
   END IF;
-  IF repeat_week IS NULL AND repeat_day IS NOT NULL THEN
-    IF duration = '7 days'::interval THEN
-      start_date := start_date + (((7 + repeat_day - cast(extract(dow from start_date) as int)) % 7) || ' days')::interval;
+  IF repeat_week IS NULL AND repeat_day IS NOT NULL THEN  
+    IF duration = '7 days'::interval THEN      
+      start_date := start_date + (((7 + repeat_day - cast(extract(dow from start_date) as int)) % 7) || ' days')::interval;     
     ELSE
-      start_date := start_date + (repeat_day - extract(day from start_date) || ' days')::interval;
+      start_date := start_date + (((repeat_day - cast(extract(dow from start_date) as int)) % 7) || ' days')::interval;
     END IF;
   END IF;
   LOOP
@@ -55,4 +53,7 @@ BEGIN
     intervals := intervals + 1;
   END LOOP;
 END;
-$BODY$;
+$BODY$
+  LANGUAGE plpgsql IMMUTABLE
+  COST 100
+  ROWS 1000;
