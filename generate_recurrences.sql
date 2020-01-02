@@ -1,4 +1,5 @@
 CREATE OR REPLACE FUNCTION  generate_recurrences(
+  frequency VARCHAR,
   duration INTERVAL,
   original_start_date DATE,
   original_end_date DATE,
@@ -22,7 +23,7 @@ BEGIN
     start_date := start_date + (((12 + repeat_month - cast(extract(month from start_date) as int)) % 12) || ' months')::interval;
   END IF;
   IF repeat_week IS NULL AND repeat_day IS NOT NULL THEN
-    IF duration = '7 days'::interval THEN
+    IF frequency = 'weekly' THEN
       start_date := start_date + (((7 + repeat_day - cast(extract(dow from start_date) as int)) % 7) || ' days')::interval;
     ELSE
       start_date := start_date + (repeat_day - extract(day from start_date) || ' days')::interval;
