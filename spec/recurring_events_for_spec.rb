@@ -460,7 +460,7 @@ describe 'recurring_events_for' do
           "insert into events (id, starts_on, frequency, count) values (1, '2008-04-25', 'monthly', 3);",
           "insert into event_recurrences (event_id, day) values (1, 28);",
           "insert into event_recurrences (event_id, day) values (1, 4);",
-          "select distinct starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-06-25 12:00pm', 'UTC', NULL);"
+          "select starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-06-25 12:00pm', 'UTC', NULL);"
         ]).should == [
           ['2008-04-25'],
           ['2008-04-28'],
@@ -492,7 +492,7 @@ describe 'recurring_events_for' do
           "insert into events (id, starts_on, frequency, separation) values (1, '2008-04-25', 'monthly', 2);",
           "insert into event_recurrences (event_id, day) values (1, 28);",
           "insert into event_recurrences (event_id, day) values (1, 4);",
-          "select distinct starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-08-25 12:00pm', 'UTC', NULL);"
+          "select starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-08-25 12:00pm', 'UTC', NULL);"
         ]).should == [
           ['2008-04-25'],
           ['2008-04-28'],
@@ -586,7 +586,7 @@ describe 'recurring_events_for' do
             "insert into events (id, starts_on, frequency) values (1, '2008-04-25', 'weekly');",
             "insert into event_recurrences (event_id, day) values (1, 2);",
             "insert into event_recurrences (event_id, day) values (1, 4);",
-            "select distinct starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-05-02 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-05-02 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2008-04-29'],
@@ -623,7 +623,7 @@ describe 'recurring_events_for' do
             "insert into events (id, starts_on, frequency) values (1, '2008-04-25', 'monthly');",
             "insert into event_recurrences (event_id, day) values (1, 28);",
             "insert into event_recurrences (event_id, day) values (1, 4);",
-            "select distinct starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-05-25 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-05-25 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2008-04-28'],
@@ -638,7 +638,7 @@ describe 'recurring_events_for' do
             "insert into events (id, starts_on, frequency) values (1, '2008-04-25', 'monthly');",
             "insert into event_recurrences (event_id, week, day) values (1, 2, 5);",
             "insert into event_recurrences (event_id, week, day) values (1, -2, 4);",
-            "select distinct starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-05-25 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2008-04-01 12:00pm', '2008-05-25 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2008-05-09'],
@@ -651,7 +651,7 @@ describe 'recurring_events_for' do
             "insert into events (id, starts_on, frequency, count) values (1, '2008-04-25', 'monthly', 5);",
             "insert into event_recurrences (event_id, week, day) values (1, 2, 5);",
             "insert into event_recurrences (event_id, week, day) values (1, -2, 4);",
-            "select distinct starts_on from recurring_events_for('2008-06-01 12:00pm', '2008-07-25 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2008-06-01 12:00pm', '2008-07-25 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-06-13'],
             ['2008-06-19']
@@ -677,7 +677,7 @@ describe 'recurring_events_for' do
             "insert into events (id, starts_on, frequency) values (1, '2008-04-25', 'yearly');",
             "insert into event_recurrences (event_id, month) values (1, 2);",
             "insert into event_recurrences (event_id, month) values (1, 7);",
-            "select distinct starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-07-25 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-07-25 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2008-07-25'],
@@ -693,7 +693,7 @@ describe 'recurring_events_for' do
             "insert into events (id, starts_on, frequency) values (1, '2008-04-25', 'yearly');",
             "insert into event_recurrences (event_id, day) values (1, 28);",
             "insert into event_recurrences (event_id, day) values (1, 7);",
-            "select distinct starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-04-28 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-04-28 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2008-04-28'],
@@ -711,7 +711,7 @@ describe 'recurring_events_for' do
             "insert into event_recurrences (event_id, month, day) values (1, 2, 7);",
             "insert into event_recurrences (event_id, month, day) values (1, 7, 28);",
             "insert into event_recurrences (event_id, month, day) values (1, 7, 7);",
-            "select distinct starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-07-07 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-07-07 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2008-07-07'],
@@ -729,7 +729,7 @@ describe 'recurring_events_for' do
             "insert into events (id, starts_on, frequency) values (1, '2008-04-25', 'yearly');",
             "insert into event_recurrences (event_id, week, day) values (1, 2, 5);",
             "insert into event_recurrences (event_id, week, day) values (1, -2, 4);",
-            "select distinct starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-04-25 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-04-25 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2009-04-10'],
@@ -746,7 +746,7 @@ describe 'recurring_events_for' do
             "insert into event_recurrences (event_id, month, week, day) values (1, 2, -2, 4);",
             "insert into event_recurrences (event_id, month, week, day) values (1, 7, 2, 5);",
             "insert into event_recurrences (event_id, month, week, day) values (1, 7, -2, 4);",
-            "select distinct starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-07-10 12:00pm', 'UTC', NULL);"
+            "select starts_on from recurring_events_for('2007-04-01 12:00pm', '2009-07-10 12:00pm', 'UTC', NULL);"
           ]).should == [
             ['2008-04-25'],
             ['2008-07-11'],
