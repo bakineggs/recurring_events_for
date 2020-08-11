@@ -13,10 +13,13 @@ BEGIN
   IF start_date > end_date THEN
     RETURN 0;
   END IF;
+  WHILE start_date + multiplier * duration < end_date LOOP
+    multiplier := multiplier * 2;
+  END LOOP;
   LOOP
-    WHILE start_date + (count + multiplier) * duration < end_date LOOP
+    IF start_date + (count + multiplier) * duration < end_date THEN
       count := count + multiplier;
-    END LOOP;
+    END IF;
     EXIT WHEN multiplier = 1;
     multiplier := multiplier / 2;
   END LOOP;
