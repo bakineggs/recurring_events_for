@@ -8,7 +8,7 @@ CREATE OR REPLACE FUNCTION recurrences_for(
   AS $BODY$
 DECLARE
   recurrence event_recurrences;
-  recurrences_start DATE := COALESCE(event.starts_at::date, event.starts_on);
+  recurrences_start DATE := event.starts_at::date;
   recurrences_end DATE := range_end;
   duration INTERVAL := interval_for(event.frequency) * event.separation;
   next_date DATE;
@@ -32,7 +32,7 @@ BEGIN
           event.frequency,
           duration,
           recurrences_start,
-          COALESCE(event.ends_at::date, event.ends_on),
+          event.ends_at::date,
           range_start::date,
           recurrences_end,
           recurrence.month,
