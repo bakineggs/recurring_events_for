@@ -14,10 +14,10 @@ CREATE TABLE events (
   count integer,
   "until" date,
   timezone_name text not null default 'Etc/UTC',
-  isFullDay bool not null default false,
+  is_full_day bool not null default false,
   CHECK (
-    isFullDay = FALSE AND ends_at IS NOT NULL OR
-    isFullDay = TRUE)
+    is_full_day = FALSE AND ends_at IS NOT NULL OR
+    is_full_day = TRUE)
 );
 
 CREATE TABLE event_recurrences (

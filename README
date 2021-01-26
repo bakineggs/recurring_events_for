@@ -38,15 +38,14 @@
 
   events table:
 
-    starts_on (DATE), ends_on (DATE):
-      The first (or only) date that an event occurs should be stored in the
-      starts_on column. For multi-day events, set the ends_on column to
-      the final day of the event.
-
     starts_at (TIMESTAMP), ends_at (TIMESTAMP):
       The first (or only) timespan that an event occurs should be stored in
-      the starts_at and ends_at columns. These columns should not be used if
-      the starts_on or ends_on columns are also in use.
+      the starts_at and ends_at columns. If is_full_day flag is true, then the
+      timestamp portion is ignored.
+
+    is_full_day bool:
+      Should be used when an event takes the entire day.
+      Defaults to false.
 
     frequency (CHARACTER VARYING):
       This column specifies the frequency at which this event recurs. If no
