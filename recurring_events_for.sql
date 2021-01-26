@@ -26,9 +26,14 @@ BEGIN
       WHERE
         frequency <> 'once' OR
         (frequency = 'once' AND
-          ((starts_on IS NOT NULL AND ends_on IS NOT NULL AND starts_on <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND ends_on >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
-           (starts_on IS NOT NULL AND starts_on <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date AND starts_on >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) OR
-           (starts_at <= range_end AND ends_at >= range_start)))
+          ((is_full_day = TRUE
+          AND ends_at IS NOT NULL 
+          AND starts_at::date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date 
+          AND ends_at::date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) 
+          OR (is_full_day = TRUE
+          AND starts_at::date <= (timezone('UTC', range_end) AT TIME ZONE time_zone)::date 
+          AND starts_at::date >= (timezone('UTC', range_start) AT TIME ZONE time_zone)::date) 
+          OR (starts_at <= range_end AND ends_at >= range_start)))
   LOOP
     IF event.frequency = 'once' THEN
       RETURN NEXT event;
@@ -36,13 +41,13 @@ BEGIN
     END IF;
 
     -- All-day event
-    IF event.starts_on IS NOT NULL AND event.ends_on IS NULL THEN
-      original_date := event.starts_on;
+    IF event.is_full_day = TRUE AND event.ends_at IS NULL THEN
+      original_date := event.starts_at::date;
       duration := '1 day'::interval;
     -- Multi-day event
-    ELSIF event.starts_on IS NOT NULL AND event.ends_on IS NOT NULL THEN
-      original_date := event.starts_on;
-      duration := timezone(time_zone, event.ends_on) - timezone(time_zone, event.starts_on);
+    ELSIF event.is_full_day = TRUE AND event.ends_at IS NOT NULL THEN
+      original_date := event.starts_at::date;
+      duration := timezone(time_zone, event.ends_at::date) - timezone(time_zone, event.starts_at::date);
     -- Timespan event
     ELSE
       original_date := event.starts_at::date;
@@ -71,16 +76,16 @@ BEGIN
         LIMIT events_limit
     LOOP
       -- All-day event
-      IF event.starts_on IS NOT NULL AND event.ends_on IS NULL THEN
+      IF event.is_full_day = TRUE AND event.ends_at IS NULL THEN
         CONTINUE WHEN next_date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date OR next_date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
-        event.starts_on := next_date;
+        event.starts_at := next_date::date;
 
       -- Multi-day event
-      ELSIF event.starts_on IS NOT NULL AND event.ends_on IS NOT NULL THEN
-        event.starts_on := next_date;
-        CONTINUE WHEN event.starts_on > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
-        event.ends_on := next_date + duration;
-        CONTINUE WHEN event.ends_on < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date;
+      ELSIF event.is_full_day = TRUE AND event.ends_at IS NOT NULL THEN
+        event.starts_at := next_date::date;
+        CONTINUE WHEN event.starts_at::date > (timezone('UTC', range_end) AT TIME ZONE time_zone)::date;
+        event.ends_at := next_date::date + duration;
+        CONTINUE WHEN event.ends_at::date < (timezone('UTC', range_start) AT TIME ZONE time_zone)::date;
 
       -- Timespan event
       ELSE

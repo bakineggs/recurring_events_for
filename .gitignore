@@ -1,0 +1,4 @@
+.rspec
+Gemfile
+Gemfile.lock
+spec_helper.rb
